@@ -1,0 +1,294 @@
+import React, { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Sparkles, Plus, Edit2, Search, ArrowRight, MessageSquare, Check, X, Shield, Clock } from 'lucide-react'
+import { useAuth } from '../App'
+
+interface PlayerProfile {
+  id: number
+  character_name: string
+  realm: string
+  region: string
+  faction: string
+  class_name: string
+  spec_name: string
+  role: string
+  recruitment_status: string
+  goals: string[]
+}
+
+interface GuildProfile {
+  id: number
+  guild_name: string
+  realm: string
+  region: string
+  faction: string
+  recruitment_status: string
+  progression_label: string
+}
+
+interface Interest {
+  id: number
+  direction: string
+  status: string
+  message?: string
+  player_profile: { id: number; character_name: string; class_name: string; spec_name: string; realm: string }
+  guild_profile: { id: number; guild_name: string; progression_label: string; realm: string }
+}
+
+const Dashboard: React.FC = () => {
+  const { token, user } = useAuth()
+  const navigate = useNavigate()
+  const [players, setPlayers] = useState<PlayerProfile[]>([])
+  const [guilds, setGuilds] = useState<GuildProfile[]>([])
+  const [interests, setInterests] = useState<Interest[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!token) {
+      navigate("/login")
+      return
+    }
+
+    const fetchData = async () => {
+      try {
+        // Fetch current user's player profiles, guild profiles, and interests
+        const headers = { Authorization: `Bearer ${token}` }
+        
+        // 1. Fetch all players (filter by user ownership on backend, or fetch all and filter locally)
+        const pRes = await fetch("/api/players", { headers })
+        const gRes = await fetch("/api/guilds", { headers })
+        
+        if (pRes.ok && gRes.ok) {
+          const allPlayers = await pRes.json()
+          const allGuilds = await gRes.json()
+          
+          // Filter owned profiles
+          const ownedPlayers = allPlayers.filter((p: any) => p.user_id === user?.id)
+          const ownedGuilds = allGuilds.filter((g: any) => g.owner_user_id === user?.id)
+          
+          setPlayers(ownedPlayers)
+          setGuilds(ownedGuilds)
+          
+          // Fetch interests for these profiles
+          // Fetch inbox notifications/interests
+          // We can fetch interests by matching from/to profiles
+          // Let's call interests api if it exists, or list notifications
+          const iRes = await fetch("/api/notifications", { headers })
+          if (iRes.ok) {
+            const notifs = await iRes.json()
+            // Extract incoming interests from notifications payload
+            const incomingInterests = notifs
+              .filter((n: any) => n.type === "interest_received" && !n.is_read)
+              .map((n: any) => ({
+                id: n.payload.interest_id,
+                player_profile_id: n.payload.player_profile_id,
+                guild_profile_id: n.payload.guild_profile_id,
+                body: n.body
+              }))
+            setInterests(incomingInterests)
+          }
+        }
+      } catch (err) {
+        console.error("Error loading dashboard data:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [token, user])
+
+  const handleAcceptInterest = async (interestId: number) => {
+    if (!token) return
+    try {
+      const res = await fetch(`/api/interests/${interestId}/accept`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (res.ok) {
+        setInterests(prev => prev.filter(i => i.id !== interestId))
+        // Relock navigation to matches page
+        navigate("/matches")
+      }
+    } catch (err) {
+      console.error("Failed to accept interest:", err)
+    }
+  }
+
+  const handleDeclineInterest = async (interestId: number) => {
+    if (!token) return
+    try {
+      const res = await fetch(`/api/interests/${interestId}/decline`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (res.ok) {
+        setInterests(prev => prev.filter(i => i.id !== interestId))
+      }
+    } catch (err) {
+      console.error("Failed to decline interest:", err)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div class="flex-grow flex items-center justify-center bg-charcoal-dark text-white">
+        <div class="animate-pulse flex items-center gap-2">
+          <Clock class="animate-spin h-5 w-5 text-accent" />
+          <span>Loading recruitment metrics...</span>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div class="bg-charcoal-dark min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
+      {/* Welcome Header */}
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-charcoal-light pb-6">
+        <div>
+          <h1 class="text-3xl font-black text-white">Welcome back, {user?.username}</h1>
+          <p class="text-slate-400 text-sm">Manage your profiles, incoming recruitment offers, and active chats.</p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <Link to="/guilds" class="bg-accent hover:bg-accent-dark text-white px-5 py-3 rounded-xl text-sm font-bold shadow-glow-purple flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-all">
+            <Search class="h-4 w-4" /> Find a Guild
+          </Link>
+          <Link to="/players" class="bg-charcoal border border-charcoal-light hover:border-slate-400 text-white px-5 py-3 rounded-xl text-sm font-bold flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-all">
+            <Plus class="h-4 w-4" /> Recruit Players
+          </Link>
+        </div>
+      </div>
+
+      {/* Grid Dashboard columns */}
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        {/* Left Column: Player Profiles */}
+        <div class="space-y-6">
+          <div class="flex items-center justify-between border-b border-charcoal-light pb-3">
+            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+              <Sparkles class="h-5 w-5 text-accent" /> My Player Characters
+            </h3>
+            <Link to="/players/create" class="text-xs font-bold text-accent-light hover:text-accent flex items-center gap-1">
+              <Plus class="h-3.5 w-3.5" /> Create Profile
+            </Link>
+          </div>
+
+          {players.length === 0 ? (
+            <div class="bg-charcoal border border-charcoal-light rounded-2xl p-8 text-center space-y-4">
+              <p class="text-slate-400 text-sm">You haven't listed any WoW characters yet. Get discovered by guild recruiters.</p>
+              <Link to="/players/create" class="inline-flex bg-accent hover:bg-accent-dark text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-glow-purple">
+                Create Player Profile
+              </Link>
+            </div>
+          ) : (
+            <div class="space-y-4">
+              {players.map(player => (
+                <div key={player.id} class="bg-charcoal border border-charcoal-light rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 glow-card">
+                  <div class="space-y-2">
+                    <div class="flex items-center gap-2">
+                      <span class="text-lg font-black text-white">{player.character_name}</span>
+                      <span class="text-xs text-slate-400">@{player.realm} ({player.region})</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2 text-xs">
+                      <span class="px-2 py-0.5 rounded bg-charcoal-dark border border-charcoal-light text-slate-300">
+                        {player.spec_name} {player.class_name}
+                      </span>
+                      <span class="px-2 py-0.5 rounded bg-charcoal-dark border border-charcoal-light text-slate-300">
+                        {player.role}
+                      </span>
+                      <span class="px-2 py-0.5 rounded bg-emerald-950/40 border border-emerald-500/40 text-emerald-400 font-bold">
+                        {player.recruitment_status}
+                      </span>
+                    </div>
+                  </div>
+                  <Link to={`/players/edit/${player.id}`} class="bg-charcoal-dark border border-charcoal-light hover:border-slate-400 text-white p-2 rounded-xl flex items-center justify-center shrink-0">
+                    <Edit2 class="h-4 w-4" />
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Right Column: Guild Recruitment */}
+        <div class="space-y-6">
+          <div class="flex items-center justify-between border-b border-charcoal-light pb-3">
+            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+              <Shield class="h-5 w-5 text-accent" /> My Guilds & Recruitment
+            </h3>
+            <Link to="/guilds/create" class="text-xs font-bold text-accent-light hover:text-accent flex items-center gap-1">
+              <Plus class="h-3.5 w-3.5" /> Create Guild Profile
+            </Link>
+          </div>
+
+          {guilds.length === 0 ? (
+            <div class="bg-charcoal border border-charcoal-light rounded-2xl p-8 text-center space-y-4">
+              <p class="text-slate-400 text-sm">No guilds registered. Create a guild profile to recruit raiders instantly.</p>
+              <Link to="/guilds/create" class="inline-flex bg-accent hover:bg-accent-dark text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-glow-purple">
+                Create Guild Profile
+              </Link>
+            </div>
+          ) : (
+            <div class="space-y-4">
+              {guilds.map(guild => (
+                <div key={guild.id} class="bg-charcoal border border-charcoal-light rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 glow-card">
+                  <div class="space-y-2">
+                    <div class="flex items-center gap-2">
+                      <span class="text-lg font-black text-white">&lt;{guild.guild_name}&gt;</span>
+                      <span class="text-xs text-slate-400">@{guild.realm} ({guild.region})</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2 text-xs">
+                      <span class="px-2 py-0.5 rounded bg-charcoal-dark border border-charcoal-light text-slate-300">
+                        {guild.progression_label}
+                      </span>
+                      <span class="px-2 py-0.5 rounded bg-emerald-950/40 border border-emerald-500/40 text-emerald-400 font-bold">
+                        {guild.recruitment_status}
+                      </span>
+                    </div>
+                  </div>
+                  <Link to={`/guilds/edit/${guild.id}`} class="bg-charcoal-dark border border-charcoal-light hover:border-slate-400 text-white p-2 rounded-xl flex items-center justify-center shrink-0">
+                    <Edit2 class="h-4 w-4" />
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Notifications / Interests Box */}
+      {interests.length > 0 && (
+        <div class="bg-charcoal border border-charcoal-light rounded-2xl p-6 space-y-4">
+          <h4 class="text-lg font-bold text-white flex items-center gap-2">
+            Incoming Recruitment Offers ({interests.length})
+          </h4>
+          <div class="divide-y divide-charcoal-light">
+            {interests.map(item => (
+              <div key={item.id} class="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="text-sm">
+                  <p class="text-slate-200 font-medium">{item.body}</p>
+                </div>
+                <div class="flex gap-2">
+                  <button 
+                    onClick={() => handleAcceptInterest(item.id)}
+                    class="bg-accent hover:bg-accent-dark text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-glow-purple flex items-center gap-1"
+                  >
+                    <Check class="h-3.5 w-3.5" /> Accept
+                  </button>
+                  <button 
+                    onClick={() => handleDeclineInterest(item.id)}
+                    class="bg-charcoal-dark border border-charcoal-light hover:border-slate-400 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
+                  >
+                    <X class="h-3.5 w-3.5" /> Decline
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default Dashboard

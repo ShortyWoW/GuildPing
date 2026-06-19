@@ -1,0 +1,110 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: guildping_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-guildping}
+      POSTGRES_USER: ${POSTGRES_USER:-guildping}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_in_production}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-guildping} -d ${POSTGRES_DB:-guildping}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - guildping_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: guildping_redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    expose:
+      - "6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - guildping_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: guildping_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://guildping:change_me_in_production@postgres:5432/guildping}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+    networks:
+      - guildping_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: guildping_frontend
+    restart: unless-stopped
+    expose:
+      - "80"
+    networks:
+      - guildping_network
+
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: guildping_nginx
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - guildping_network
+
+  # Optional Cloudflare Tunnel service. Commented by default.
+  # To run, ensure CLOUDFLARE_TUNNEL_TOKEN is set in your .env
+  # cloudflared:
+  #   image: cloudflare/cloudflared:latest
+  #   container_name: guildping_cloudflared
+  #   restart: unless-stopped
+  #   command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+  #   depends_on:
+  #     - nginx
+  #   networks:
+  #     - guildping_network
+
+volumes:
+  postgres_data:
+    name: guildping_postgres_data
+  redis_data:
+    name: guildping_redis_data
+
+networks:
+  guildping_network:
+    name: guildping_network

@@ -87,17 +87,17 @@ services:
     networks:
       - guildping_network
 
-  # Optional Cloudflare Tunnel service. Commented by default.
+  # Cloudflare Tunnel service
   # To run, ensure CLOUDFLARE_TUNNEL_TOKEN is set in your .env
-  # cloudflared:
-  #   image: cloudflare/cloudflared:latest
-  #   container_name: guildping_cloudflared
-  #   restart: unless-stopped
-  #   command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
-  #   depends_on:
-  #     - nginx
-  #   networks:
-  #     - guildping_network
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: guildping_cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - nginx
+    networks:
+      - guildping_network
 
 volumes:
   postgres_data:

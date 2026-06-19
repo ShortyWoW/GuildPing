@@ -79,7 +79,7 @@ const Register: React.FC = () => {
         <form className="mt-8 space-y-6 relative z-10" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label for="email" className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Email address</label>
+              <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Email address</label>
               <input
                 id="email"
                 type="email"
@@ -91,7 +91,7 @@ const Register: React.FC = () => {
               />
             </div>
             <div>
-              <label for="username" className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Username</label>
+              <label htmlFor="username" className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Username</label>
               <input
                 id="username"
                 type="text"
@@ -103,7 +103,7 @@ const Register: React.FC = () => {
               />
             </div>
             <div>
-              <label for="password" className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Password</label>
+              <label htmlFor="password" className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Password</label>
               <input
                 id="password"
                 type="password"

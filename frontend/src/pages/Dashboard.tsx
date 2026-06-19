@@ -28,11 +28,9 @@ interface GuildProfile {
 
 interface Interest {
   id: number
-  direction: string
-  status: string
-  message?: string
-  player_profile: { id: number; character_name: string; class_name: string; spec_name: string; realm: string }
-  guild_profile: { id: number; guild_name: string; progression_label: string; realm: string }
+  player_profile_id: number
+  guild_profile_id: number
+  body: string
 }
 
 const Dashboard: React.FC = () => {

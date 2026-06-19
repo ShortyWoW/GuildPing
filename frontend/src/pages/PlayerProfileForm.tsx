@@ -158,9 +158,9 @@ const PlayerProfileForm: React.FC = () => {
 
   if (fetching) {
     return (
-      <div class="flex-grow flex items-center justify-center bg-charcoal-dark text-white">
-        <div class="animate-pulse flex items-center gap-2">
-          <Clock class="animate-spin h-5 w-5 text-accent" />
+      <div className="flex-grow flex items-center justify-center bg-charcoal-dark text-white">
+        <div className="animate-pulse flex items-center gap-2">
+          <Clock className="animate-spin h-5 w-5 text-accent" />
           <span>Fetching character details...</span>
         </div>
       </div>
@@ -168,51 +168,51 @@ const PlayerProfileForm: React.FC = () => {
   }
 
   return (
-    <div class="bg-charcoal-dark min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto space-y-6">
-      <div class="flex items-center gap-3">
-        <button onClick={() => navigate("/dashboard")} class="bg-charcoal border border-charcoal-light text-slate-400 hover:text-white p-2.5 rounded-xl transition-colors">
-          <ArrowLeft class="h-4 w-4" />
+    <div className="bg-charcoal-dark min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto space-y-6">
+      <div className="flex items-center gap-3">
+        <button onClick={() => navigate("/dashboard")} className="bg-charcoal border border-charcoal-light text-slate-400 hover:text-white p-2.5 rounded-xl transition-colors">
+          <ArrowLeft className="h-4 w-4" />
         </button>
-        <h1 class="text-3xl font-black text-white">{id ? "Edit Character Profile" : "List Your WoW Character"}</h1>
+        <h1 className="text-3xl font-black text-white">{id ? "Edit Character Profile" : "List Your WoW Character"}</h1>
       </div>
 
       {error && (
-        <div class="bg-rose-900/30 border border-rose-500/40 text-rose-200 text-xs px-4 py-3 rounded-xl">
+        <div className="bg-rose-900/30 border border-rose-500/40 text-rose-200 text-xs px-4 py-3 rounded-xl">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} class="bg-charcoal border border-charcoal-light p-8 rounded-2xl shadow-2xl space-y-8">
+      <form onSubmit={handleSubmit} className="bg-charcoal border border-charcoal-light p-8 rounded-2xl shadow-2xl space-y-8">
         {/* Core details */}
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Character Name</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Character Name</label>
             <input
               type="text"
               required
               value={characterName}
               onChange={e => setCharacterName(e.target.value)}
               placeholder="Sylvana"
-              class="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
+              className="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
             />
           </div>
           <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Realm / Server</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Realm / Server</label>
             <input
               type="text"
               required
               value={realm}
               onChange={e => setRealm(e.target.value)}
               placeholder="Illidan"
-              class="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
+              className="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
             />
           </div>
           <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Region</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Region</label>
             <select
               value={region}
               onChange={e => setRegion(e.target.value)}
-              class="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
+              className="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
             >
               <option value="US">US</option>
               <option value="EU">EU</option>
@@ -223,13 +223,13 @@ const PlayerProfileForm: React.FC = () => {
         </div>
 
         {/* Faction Class Spec */}
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Faction</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Faction</label>
             <select
               value={faction}
               onChange={e => setFaction(e.target.value)}
-              class="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
+              className="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
             >
               <option value="Alliance">Alliance</option>
               <option value="Horde">Horde</option>
@@ -237,33 +237,33 @@ const PlayerProfileForm: React.FC = () => {
             </select>
           </div>
           <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Class</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Class</label>
             <input
               type="text"
               required
               value={className}
               onChange={e => setClassName(e.target.value)}
               placeholder="Hunter"
-              class="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
+              className="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
             />
           </div>
           <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Spec</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Spec</label>
             <input
               type="text"
               required
               value={specName}
               onChange={e => setSpecName(e.target.value)}
               placeholder="Marksmanship"
-              class="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
+              className="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
             />
           </div>
           <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Role</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Role</label>
             <select
               value={role}
               onChange={e => setRole(e.target.value)}
-              class="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
+              className="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
             >
               <option value="DPS">DPS</option>
               <option value="Healer">Healer</option>
@@ -273,23 +273,23 @@ const PlayerProfileForm: React.FC = () => {
         </div>
 
         {/* Item Level and Status */}
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Item Level</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Item Level</label>
             <input
               type="number"
               value={itemLevel}
               onChange={e => setItemLevel(e.target.value === "" ? "" : Number(e.target.value))}
               placeholder="525"
-              class="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
+              className="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
             />
           </div>
           <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Recruitment Status</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Recruitment Status</label>
             <select
               value={recruitmentStatus}
               onChange={e => setRecruitmentStatus(e.target.value)}
-              class="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
+              className="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
             >
               <option value="LOOKING">Looking for Guild (Active)</option>
               <option value="OPEN_TO_OFFERS">Open to Offers (Selective)</option>
@@ -297,11 +297,11 @@ const PlayerProfileForm: React.FC = () => {
             </select>
           </div>
           <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Visibility</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Visibility</label>
             <select
               value={visibility}
               onChange={e => setVisibility(e.target.value)}
-              class="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
+              className="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
             >
               <option value="PUBLIC">Public (Searchable)</option>
               <option value="UNLISTED">Unlisted (Link only)</option>
@@ -312,8 +312,8 @@ const PlayerProfileForm: React.FC = () => {
 
         {/* Goals Checklist */}
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Recruitment Goals</label>
-          <div class="flex flex-wrap gap-3">
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Recruitment Goals</label>
+          <div className="flex flex-wrap gap-3">
             {GOAL_OPTIONS.map(goal => {
               const active = goals.includes(goal)
               return (
@@ -321,7 +321,7 @@ const PlayerProfileForm: React.FC = () => {
                   type="button"
                   key={goal}
                   onClick={() => handleGoalToggle(goal)}
-                  class={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+                  className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
                     active 
                       ? 'bg-accent/20 border-accent text-accent-light shadow-glow-purple' 
                       : 'bg-charcoal-dark border-charcoal-light text-slate-400 hover:border-slate-400'
@@ -335,9 +335,9 @@ const PlayerProfileForm: React.FC = () => {
         </div>
 
         {/* Availability */}
-        <div class="space-y-4">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Weekly Availability</label>
-          <div class="flex flex-wrap gap-2">
+        <div className="space-y-4">
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate-400">Weekly Availability</label>
+          <div className="flex flex-wrap gap-2">
             {DAYS_OF_WEEK.map((day, idx) => {
               const active = availDays.includes(idx)
               return (
@@ -345,7 +345,7 @@ const PlayerProfileForm: React.FC = () => {
                   type="button"
                   key={day}
                   onClick={() => handleDayToggle(idx)}
-                  class={`px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${
+                  className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${
                     active 
                       ? 'bg-accent/20 border-accent text-accent-light' 
                       : 'bg-charcoal-dark border-charcoal-light text-slate-400 hover:border-slate-400'
@@ -357,98 +357,98 @@ const PlayerProfileForm: React.FC = () => {
             })}
           </div>
           
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Start Time</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Start Time</label>
               <input
                 type="text"
                 required
                 value={startTime}
                 onChange={e => setStartTime(e.target.value)}
                 placeholder="19:00"
-                class="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
+                className="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
               />
             </div>
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">End Time</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">End Time</label>
               <input
                 type="text"
                 required
                 value={endTime}
                 onChange={e => setEndTime(e.target.value)}
                 placeholder="22:00"
-                class="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
+                className="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
               />
             </div>
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Timezone</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Timezone</label>
               <input
                 type="text"
                 required
                 value={timezone}
                 onChange={e => setTimezone(e.target.value)}
                 placeholder="EST"
-                class="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
+                className="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
               />
             </div>
           </div>
         </div>
 
         {/* Willingness Checkboxes */}
-        <div class="flex flex-col sm:flex-row gap-6 bg-charcoal-dark p-4 rounded-xl border border-charcoal-light">
-          <label class="flex items-center gap-3 cursor-pointer text-sm font-semibold text-slate-300">
+        <div className="flex flex-col sm:flex-row gap-6 bg-charcoal-dark p-4 rounded-xl border border-charcoal-light">
+          <label className="flex items-center gap-3 cursor-pointer text-sm font-semibold text-slate-300">
             <input
               type="checkbox"
               checked={transferWilling}
               onChange={e => setTransferWilling(e.target.checked)}
-              class="h-4 w-4 bg-charcoal accent-accent border-charcoal-light rounded"
+              className="h-4 w-4 bg-charcoal accent-accent border-charcoal-light rounded"
             />
             Willing to Server Transfer
           </label>
-          <label class="flex items-center gap-3 cursor-pointer text-sm font-semibold text-slate-300">
+          <label className="flex items-center gap-3 cursor-pointer text-sm font-semibold text-slate-300">
             <input
               type="checkbox"
               checked={factionWilling}
               onChange={e => setFactionWilling(e.target.checked)}
-              class="h-4 w-4 bg-charcoal accent-accent border-charcoal-light rounded"
+              className="h-4 w-4 bg-charcoal accent-accent border-charcoal-light rounded"
             />
             Willing to Faction Change
           </label>
         </div>
 
         {/* Discord and Battletag info */}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Discord Handle</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Discord Handle</label>
             <input
               type="text"
               value={discordHandle}
               onChange={e => setDiscordHandle(e.target.value)}
               placeholder="sylvanas_windrunner"
-              class="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
+              className="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
             />
           </div>
           <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">BattleTag</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">BattleTag</label>
             <input
               type="text"
               value={battleTag}
               onChange={e => setBattleTag(e.target.value)}
               placeholder="Sylvanas#1234"
-              class="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
+              className="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
             />
           </div>
         </div>
 
         {/* Bio */}
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Bio / Log Summary</label>
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Bio / Log Summary</label>
           <textarea
             value={bio}
             onChange={e => setBio(e.target.value)}
             rows={4}
             placeholder="Looking for CE focused guild. Finished 8/8H, 4/8M current tier. Have logs available."
-            class="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none resize-none"
+            className="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none resize-none"
           />
         </div>
 
@@ -456,9 +456,9 @@ const PlayerProfileForm: React.FC = () => {
         <button
           type="submit"
           disabled={loading}
-          class="w-full bg-accent hover:bg-accent-dark text-white py-4 rounded-xl font-bold hover:scale-[1.01] active:scale-[0.99] transition-all shadow-glow-purple flex items-center justify-center gap-2"
+          className="w-full bg-accent hover:bg-accent-dark text-white py-4 rounded-xl font-bold hover:scale-[1.01] active:scale-[0.99] transition-all shadow-glow-purple flex items-center justify-center gap-2"
         >
-          <Sparkles class="h-4 w-4" /> {loading ? "Saving Character Listing..." : "Save Character Profile"}
+          <Sparkles className="h-4 w-4" /> {loading ? "Saving Character Listing..." : "Save Character Profile"}
         </button>
       </form>
     </div>

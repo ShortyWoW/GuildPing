@@ -209,61 +209,61 @@ const BrowsePlayers: React.FC = () => {
   }
 
   return (
-    <div class="bg-charcoal-dark min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+    <div className="bg-charcoal-dark min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
       <div>
-        <h1 class="text-3xl font-black text-glow-purple text-white flex items-center gap-2.5">
-          <Users class="h-8 w-8 text-accent animate-pulse" /> Recruit World of Warcraft Players
+        <h1 className="text-3xl font-black text-glow-purple text-white flex items-center gap-2.5">
+          <Users className="h-8 w-8 text-accent animate-pulse" /> Recruit World of Warcraft Players
         </h1>
-        <p class="text-slate-400 text-sm mt-2">Browse class listings, check schedules, and recruit players with instant double-opt-in matching.</p>
+        <p className="text-slate-400 text-sm mt-2">Browse class listings, check schedules, and recruit players with instant double-opt-in matching.</p>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
         
         {/* Left Side: Filter Form Panel */}
-        <form onSubmit={handleApplyFilters} class="bg-charcoal border border-charcoal-light rounded-2xl p-6 space-y-6">
-          <div class="flex items-center justify-between border-b border-charcoal-light pb-3">
-            <h4 class="font-bold text-white flex items-center gap-2 text-sm uppercase tracking-wider">
-              <Filter class="h-4 w-4 text-accent" /> Search Filters
+        <form onSubmit={handleApplyFilters} className="bg-charcoal border border-charcoal-light rounded-2xl p-6 space-y-6">
+          <div className="flex items-center justify-between border-b border-charcoal-light pb-3">
+            <h4 className="font-bold text-white flex items-center gap-2 text-sm uppercase tracking-wider">
+              <Filter className="h-4 w-4 text-accent" /> Search Filters
             </h4>
             <button 
               type="button" 
               onClick={handleResetFilters}
-              class="text-xs text-slate-400 hover:text-accent font-semibold"
+              className="text-xs text-slate-400 hover:text-accent font-semibold"
             >
               Reset All
             </button>
           </div>
 
           {/* Core class details */}
-          <div class="space-y-4">
+          <div className="space-y-4">
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Class</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Class</label>
               <input 
                 type="text"
                 placeholder="e.g. Hunter"
                 value={className}
                 onChange={e => setClassName(e.target.value)}
-                class="w-full bg-charcoal-dark border border-charcoal-light px-3 py-2.5 rounded-xl text-xs text-white focus:border-accent focus:outline-none"
+                className="w-full bg-charcoal-dark border border-charcoal-light px-3 py-2.5 rounded-xl text-xs text-white focus:border-accent focus:outline-none"
               />
             </div>
 
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Spec</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Spec</label>
               <input 
                 type="text"
                 placeholder="e.g. Beast Mastery"
                 value={specName}
                 onChange={e => setSpecName(e.target.value)}
-                class="w-full bg-charcoal-dark border border-charcoal-light px-3 py-2.5 rounded-xl text-xs text-white focus:border-accent focus:outline-none"
+                className="w-full bg-charcoal-dark border border-charcoal-light px-3 py-2.5 rounded-xl text-xs text-white focus:border-accent focus:outline-none"
               />
             </div>
 
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Role</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Role</label>
               <select 
                 value={role}
                 onChange={e => setRole(e.target.value)}
-                class="w-full bg-charcoal-dark border border-charcoal-light px-3 py-2.5 rounded-xl text-xs text-white focus:border-accent focus:outline-none"
+                className="w-full bg-charcoal-dark border border-charcoal-light px-3 py-2.5 rounded-xl text-xs text-white focus:border-accent focus:outline-none"
               >
                 <option value="">Any Role</option>
                 {ROLE_OPTIONS.map(r => (
@@ -274,13 +274,13 @@ const BrowsePlayers: React.FC = () => {
           </div>
 
           {/* Region & Realm */}
-          <div class="space-y-4">
+          <div className="space-y-4">
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Region</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Region</label>
               <select 
                 value={region}
                 onChange={e => setRegion(e.target.value)}
-                class="w-full bg-charcoal-dark border border-charcoal-light px-3 py-2.5 rounded-xl text-xs text-white focus:border-accent focus:outline-none"
+                className="w-full bg-charcoal-dark border border-charcoal-light px-3 py-2.5 rounded-xl text-xs text-white focus:border-accent focus:outline-none"
               >
                 <option value="">Any Region</option>
                 <option value="US">US</option>
@@ -291,22 +291,22 @@ const BrowsePlayers: React.FC = () => {
             </div>
 
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Realm / Server</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Realm / Server</label>
               <input 
                 type="text"
                 placeholder="e.g. Illidan"
                 value={realm}
                 onChange={e => setRealm(e.target.value)}
-                class="w-full bg-charcoal-dark border border-charcoal-light px-3 py-2.5 rounded-xl text-xs text-white focus:border-accent focus:outline-none"
+                className="w-full bg-charcoal-dark border border-charcoal-light px-3 py-2.5 rounded-xl text-xs text-white focus:border-accent focus:outline-none"
               />
             </div>
 
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Recruitment Status</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Recruitment Status</label>
               <select 
                 value={recruitmentStatus}
                 onChange={e => setRecruitmentStatus(e.target.value)}
-                class="w-full bg-charcoal-dark border border-charcoal-light px-3 py-2.5 rounded-xl text-xs text-white focus:border-accent focus:outline-none"
+                className="w-full bg-charcoal-dark border border-charcoal-light px-3 py-2.5 rounded-xl text-xs text-white focus:border-accent focus:outline-none"
               >
                 <option value="">Any Status</option>
                 <option value="LOOKING">Looking For Guild</option>
@@ -317,13 +317,13 @@ const BrowsePlayers: React.FC = () => {
           </div>
 
           {/* Availability details */}
-          <div class="space-y-4">
+          <div className="space-y-4">
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Available Day</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Available Day</label>
               <select 
                 value={availabilityDay}
                 onChange={e => setAvailabilityDay(e.target.value === "" ? "" : Number(e.target.value))}
-                class="w-full bg-charcoal-dark border border-charcoal-light px-3 py-2.5 rounded-xl text-xs text-white focus:border-accent focus:outline-none"
+                className="w-full bg-charcoal-dark border border-charcoal-light px-3 py-2.5 rounded-xl text-xs text-white focus:border-accent focus:outline-none"
               >
                 <option value="">Any Day</option>
                 {DAYS_OF_WEEK.map((day, idx) => (
@@ -333,32 +333,32 @@ const BrowsePlayers: React.FC = () => {
             </div>
 
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Timezone</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Timezone</label>
               <input 
                 type="text"
                 placeholder="e.g. EST"
                 value={timezone}
                 onChange={e => setTimezone(e.target.value)}
-                class="w-full bg-charcoal-dark border border-charcoal-light px-3 py-2.5 rounded-xl text-xs text-white focus:border-accent focus:outline-none"
+                className="w-full bg-charcoal-dark border border-charcoal-light px-3 py-2.5 rounded-xl text-xs text-white focus:border-accent focus:outline-none"
               />
             </div>
 
-            <div class="flex items-center gap-2 pt-1.5">
+            <div className="flex items-center gap-2 pt-1.5">
               <input
                 type="checkbox"
                 id="transferWilling"
                 checked={transferWilling === true}
                 onChange={e => setTransferWilling(e.target.checked ? true : "")}
-                class="bg-charcoal accent-accent border-charcoal-light rounded h-4 w-4"
+                className="bg-charcoal accent-accent border-charcoal-light rounded h-4 w-4"
               />
-              <label htmlFor="transferWilling" class="text-xs font-bold text-slate-400 cursor-pointer">Transfer Willing Only</label>
+              <label htmlFor="transferWilling" className="text-xs font-bold text-slate-400 cursor-pointer">Transfer Willing Only</label>
             </div>
           </div>
 
           {/* Goals */}
-          <div class="space-y-2">
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Goals</label>
-            <div class="flex flex-wrap gap-1.5">
+          <div className="space-y-2">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-400">Goals</label>
+            <div className="flex flex-wrap gap-1.5">
               {GOAL_OPTIONS.map(goal => {
                 const active = selectedGoals.includes(goal)
                 return (
@@ -366,7 +366,7 @@ const BrowsePlayers: React.FC = () => {
                     type="button"
                     key={goal}
                     onClick={() => handleGoalToggle(goal)}
-                    class={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
+                    className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
                       active 
                         ? 'bg-accent/25 border-accent text-accent-light' 
                         : 'bg-charcoal-dark border-charcoal-light text-slate-400 hover:border-slate-400'
@@ -381,32 +381,32 @@ const BrowsePlayers: React.FC = () => {
 
           <button
             type="submit"
-            class="w-full bg-accent hover:bg-accent-dark text-white text-xs font-bold py-3 rounded-xl transition-all shadow-glow-purple flex items-center justify-center gap-1.5"
+            className="w-full bg-accent hover:bg-accent-dark text-white text-xs font-bold py-3 rounded-xl transition-all shadow-glow-purple flex items-center justify-center gap-1.5"
           >
-            <Search class="h-4 w-4" /> Apply Filters
+            <Search className="h-4 w-4" /> Apply Filters
           </button>
         </form>
 
         {/* Right Side: Players Listings */}
-        <div class="lg:col-span-3 space-y-6">
+        <div className="lg:col-span-3 space-y-6">
           {loading ? (
-            <div class="bg-charcoal border border-charcoal-light rounded-2xl p-16 text-center text-slate-400 flex flex-col items-center justify-center gap-3">
-              <Clock class="animate-spin h-8 w-8 text-accent" />
-              <span class="text-sm">Scanning characters...</span>
+            <div className="bg-charcoal border border-charcoal-light rounded-2xl p-16 text-center text-slate-400 flex flex-col items-center justify-center gap-3">
+              <Clock className="animate-spin h-8 w-8 text-accent" />
+              <span className="text-sm">Scanning characters...</span>
             </div>
           ) : players.length === 0 ? (
-            <div class="bg-charcoal border border-charcoal-light rounded-2xl p-16 text-center text-slate-400 space-y-4">
-              <Users class="h-12 w-12 mx-auto text-charcoal-light" />
-              <p class="text-sm">No player characters matching your criteria were found. Adjust filters and try again.</p>
+            <div className="bg-charcoal border border-charcoal-light rounded-2xl p-16 text-center text-slate-400 space-y-4">
+              <Users className="h-12 w-12 mx-auto text-charcoal-light" />
+              <p className="text-sm">No player characters matching your criteria were found. Adjust filters and try again.</p>
             </div>
           ) : (
-            <div class="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 gap-6">
               {players.map(player => (
-                <div key={player.id} class="bg-charcoal border border-charcoal-light rounded-2xl p-6 hover:border-charcoal-light transition-all flex flex-col md:flex-row md:items-start justify-between gap-6 glow-card">
+                <div key={player.id} className="bg-charcoal border border-charcoal-light rounded-2xl p-6 hover:border-charcoal-light transition-all flex flex-col md:flex-row md:items-start justify-between gap-6 glow-card">
                   {/* Player details */}
-                  <div class="space-y-4 flex-grow">
-                    <div class="flex flex-wrap items-center gap-2.5">
-                      <span class={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                  <div className="space-y-4 flex-grow">
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                         player.faction === 'Alliance' 
                           ? 'bg-blue-950/40 border border-blue-500/40 text-blue-400' 
                           : player.faction === 'Horde' 
@@ -415,34 +415,34 @@ const BrowsePlayers: React.FC = () => {
                       }`}>
                         {player.faction}
                       </span>
-                      <h3 class="text-xl font-black text-white">{player.character_name}</h3>
-                      <span class="text-xs text-slate-400 flex items-center gap-1">
-                        <MapPin class="h-3 w-3" /> {player.realm} ({player.region})
+                      <h3 className="text-xl font-black text-white">{player.character_name}</h3>
+                      <span className="text-xs text-slate-400 flex items-center gap-1">
+                        <MapPin className="h-3 w-3" /> {player.realm} ({player.region})
                       </span>
                     </div>
 
-                    <div class="flex flex-wrap items-center gap-4 text-xs">
-                      <span class="px-2 py-0.5 rounded bg-charcoal-dark border border-charcoal-light text-slate-300 font-semibold">
+                    <div className="flex flex-wrap items-center gap-4 text-xs">
+                      <span className="px-2 py-0.5 rounded bg-charcoal-dark border border-charcoal-light text-slate-300 font-semibold">
                         {player.spec_name} {player.class_name}
                       </span>
-                      <span class="px-2 py-0.5 rounded bg-charcoal-dark border border-charcoal-light text-slate-300">
+                      <span className="px-2 py-0.5 rounded bg-charcoal-dark border border-charcoal-light text-slate-300">
                         {player.role}
                       </span>
                       
                       {player.item_level && (
-                        <span class="text-slate-300 font-bold">
+                        <span className="text-slate-300 font-bold">
                           ilvl {player.item_level}
                         </span>
                       )}
                       
-                      <span class="px-2 py-0.5 rounded bg-emerald-950/40 border border-emerald-500/40 text-emerald-400 font-bold text-[10px]">
+                      <span className="px-2 py-0.5 rounded bg-emerald-950/40 border border-emerald-500/40 text-emerald-400 font-bold text-[10px]">
                         {player.recruitment_status}
                       </span>
 
                       {/* Availability */}
                       {player.availability?.days && (
-                        <div class="flex items-center gap-1.5 text-slate-400">
-                          <Calendar class="h-3.5 w-3.5" />
+                        <div className="flex items-center gap-1.5 text-slate-400">
+                          <Calendar className="h-3.5 w-3.5" />
                           <span>
                             {player.availability.days.map(d => DAYS_OF_WEEK[d].substring(0, 3)).join(", ")} @ {player.availability.start_time}-{player.availability.end_time} {player.availability.timezone}
                           </span>
@@ -451,34 +451,34 @@ const BrowsePlayers: React.FC = () => {
                     </div>
 
                     {player.bio && (
-                      <p class="text-xs text-slate-400 line-clamp-2 max-w-2xl">{player.bio}</p>
+                      <p className="text-xs text-slate-400 line-clamp-2 max-w-2xl">{player.bio}</p>
                     )}
 
                     {/* Transfers, Faction change and Goals */}
-                    <div class="space-y-2">
-                      <div class="flex flex-wrap gap-1.5 items-center">
-                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mr-1">Raid Goals:</span>
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap gap-1.5 items-center">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mr-1">Raid Goals:</span>
                         {player.goals?.map(g => (
-                          <span key={g} class="bg-charcoal-dark px-2.5 py-0.5 rounded text-[10px] text-slate-300 border border-charcoal-light">
+                          <span key={g} className="bg-charcoal-dark px-2.5 py-0.5 rounded text-[10px] text-slate-300 border border-charcoal-light">
                             {g}
                           </span>
                         ))}
                       </div>
 
-                      <div class="flex flex-wrap gap-3 text-[10px] font-bold text-slate-400">
-                        <span>Transfer: <strong class={player.transfer_willing ? "text-emerald-400" : "text-slate-500"}>{player.transfer_willing ? "Willing" : "No"}</strong></span>
-                        <span>Faction Change: <strong class={player.faction_change_willing ? "text-emerald-400" : "text-slate-500"}>{player.faction_change_willing ? "Willing" : "No"}</strong></span>
+                      <div className="flex flex-wrap gap-3 text-[10px] font-bold text-slate-400">
+                        <span>Transfer: <strong className={player.transfer_willing ? "text-emerald-400" : "text-slate-500"}>{player.transfer_willing ? "Willing" : "No"}</strong></span>
+                        <span>Faction Change: <strong className={player.faction_change_willing ? "text-emerald-400" : "text-slate-500"}>{player.faction_change_willing ? "Willing" : "No"}</strong></span>
                       </div>
                     </div>
                   </div>
 
                   {/* Actions column */}
-                  <div class="flex md:flex-col items-stretch justify-center gap-2 shrink-0 md:w-36">
+                  <div className="flex md:flex-col items-stretch justify-center gap-2 shrink-0 md:w-36">
                     <button
                       onClick={() => openInterestModal(player)}
-                      class="flex-grow bg-accent hover:bg-accent-dark text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-glow-purple flex items-center justify-center gap-1.5 transition-all"
+                      className="flex-grow bg-accent hover:bg-accent-dark text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-glow-purple flex items-center justify-center gap-1.5 transition-all"
                     >
-                      <Send class="h-3.5 w-3.5" /> Recruit Raider
+                      <Send className="h-3.5 w-3.5" /> Recruit Raider
                     </button>
                   </div>
                 </div>
@@ -490,37 +490,37 @@ const BrowsePlayers: React.FC = () => {
 
       {/* Express Interest Modal popup */}
       {interestModalOpen && selectedPlayer && (
-        <div class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div class="bg-charcoal border border-charcoal-light rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-6">
-            <div class="flex items-center justify-between border-b border-charcoal-light pb-3">
-              <h3 class="text-lg font-black text-white">Recruit {selectedPlayer.character_name}</h3>
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-charcoal border border-charcoal-light rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-6">
+            <div className="flex items-center justify-between border-b border-charcoal-light pb-3">
+              <h3 className="text-lg font-black text-white">Recruit {selectedPlayer.character_name}</h3>
               <button 
                 onClick={() => setInterestModalOpen(false)}
-                class="text-slate-400 hover:text-white font-bold"
+                className="text-slate-400 hover:text-white font-bold"
               >
                 &times;
               </button>
             </div>
 
             {interestError && (
-              <div class="bg-rose-950/40 border border-rose-500/40 text-rose-200 text-xs px-4 py-2.5 rounded-xl">
+              <div className="bg-rose-950/40 border border-rose-500/40 text-rose-200 text-xs px-4 py-2.5 rounded-xl">
                 {interestError}
               </div>
             )}
 
             {interestSuccess && (
-              <div class="bg-emerald-950/40 border border-emerald-500/40 text-emerald-200 text-xs px-4 py-2.5 rounded-xl">
+              <div className="bg-emerald-950/40 border border-emerald-500/40 text-emerald-200 text-xs px-4 py-2.5 rounded-xl">
                 {interestSuccess}
               </div>
             )}
 
-            <div class="space-y-4">
+            <div className="space-y-4">
               <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Select Your Guild Listing</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Select Your Guild Listing</label>
                 <select
                   value={selectedGuildId}
                   onChange={e => setSelectedGuildId(Number(e.target.value))}
-                  class="w-full bg-charcoal-dark border border-charcoal-light px-3 py-2.5 rounded-xl text-xs text-white focus:border-accent focus:outline-none"
+                  className="w-full bg-charcoal-dark border border-charcoal-light px-3 py-2.5 rounded-xl text-xs text-white focus:border-accent focus:outline-none"
                 >
                   {myGuilds.map(g => (
                     <option key={g.id} value={g.id}>
@@ -531,28 +531,28 @@ const BrowsePlayers: React.FC = () => {
               </div>
 
               <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Recruitment Offer Message (Optional)</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Recruitment Offer Message (Optional)</label>
                 <textarea
                   value={interestMessage}
                   onChange={e => setInterestMessage(e.target.value)}
                   placeholder="Hey, we are currently recruiting for our mythic progression team. Your logs and raid schedules match ours perfectly! Let's talk."
                   rows={4}
-                  class="w-full bg-charcoal-dark border border-charcoal-light px-3 py-2.5 rounded-xl text-xs text-white focus:border-accent focus:outline-none resize-none"
+                  className="w-full bg-charcoal-dark border border-charcoal-light px-3 py-2.5 rounded-xl text-xs text-white focus:border-accent focus:outline-none resize-none"
                 />
               </div>
             </div>
 
-            <div class="flex justify-end gap-3 pt-2">
+            <div className="flex justify-end gap-3 pt-2">
               <button
                 onClick={() => setInterestModalOpen(false)}
-                class="bg-charcoal-dark border border-charcoal-light hover:border-slate-400 text-white text-xs font-semibold px-4 py-2 rounded-xl"
+                className="bg-charcoal-dark border border-charcoal-light hover:border-slate-400 text-white text-xs font-semibold px-4 py-2 rounded-xl"
               >
                 Cancel
               </button>
               <button
                 onClick={submitInterest}
                 disabled={submittingInterest}
-                class="bg-accent hover:bg-accent-dark text-white text-xs font-bold px-4 py-2 rounded-xl shadow-glow-purple flex items-center gap-1.5"
+                className="bg-accent hover:bg-accent-dark text-white text-xs font-bold px-4 py-2 rounded-xl shadow-glow-purple flex items-center gap-1.5"
               >
                 {submittingInterest ? "Sending..." : "Send Offer"}
               </button>

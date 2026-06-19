@@ -20,10 +20,10 @@ import GuildProfileForm from './pages/GuildProfileForm'
 // --- AUTH CONTEXT & CLIENT STATE ---
 
 interface User {
-  id: int
+  id: number
   email: string
   username: string
-  is_admin: bool
+  is_admin: boolean
 }
 
 interface AuthContextType {
@@ -175,12 +175,12 @@ export const App: React.FC = () => {
   return (
     <AuthContext.Provider value={{ token, user, login, logout, refreshUser }}>
       <BrowserRouter>
-        <div class="flex flex-col min-h-screen">
+        <div className="flex flex-col min-h-screen">
           <NavigationHeader 
             unreadNotifications={unreadNotifications} 
             setUnreadNotifications={setUnreadNotifications}
           />
-          <main class="flex-grow flex flex-col">
+          <main className="flex-grow flex flex-col">
             <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/about" element={<About />} />
@@ -205,14 +205,14 @@ export const App: React.FC = () => {
         </div>
 
         {/* Floating Toast Notification Container */}
-        <div class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 max-w-sm w-full">
+        <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 max-w-sm w-full">
           {toasts.map(toast => (
             <div 
               key={toast.id} 
-              class="bg-charcoal border-l-4 border-accent text-white p-4 rounded-r-xl shadow-2xl border border-charcoal-light animate-bounce"
+              className="bg-charcoal border-l-4 border-accent text-white p-4 rounded-r-xl shadow-2xl border border-charcoal-light animate-bounce"
             >
-              <h5 class="font-bold text-sm text-glow-purple">{toast.title}</h5>
-              <p class="text-xs text-slate-300 mt-1">{toast.body}</p>
+              <h5 className="font-bold text-sm text-glow-purple">{toast.title}</h5>
+              <p className="text-xs text-slate-300 mt-1">{toast.body}</p>
             </div>
           ))}
         </div>
@@ -234,49 +234,49 @@ const NavigationHeader: React.FC<NavigationHeaderProps> = ({ unreadNotifications
   const location = useLocation()
 
   return (
-    <header class="bg-charcoal-dark border-b border-charcoal-light sticky top-0 z-40">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-16">
+    <header className="bg-charcoal-dark border-b border-charcoal-light sticky top-0 z-40">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
           {/* Logo Title */}
-          <div class="flex items-center gap-2">
-            <Link to={user ? "/dashboard" : "/"} class="flex items-center gap-2 group">
-              <div class="h-9 w-9 rounded-xl bg-accent flex items-center justify-center font-extrabold text-white text-glow-purple">GP</div>
-              <span class="text-lg font-black tracking-wider text-white group-hover:text-accent transition-colors">GUILDPING</span>
+          <div className="flex items-center gap-2">
+            <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2 group">
+              <div className="h-9 w-9 rounded-xl bg-accent flex items-center justify-center font-extrabold text-white text-glow-purple">GP</div>
+              <span className="text-lg font-black tracking-wider text-white group-hover:text-accent transition-colors">GUILDPING</span>
             </Link>
           </div>
 
           {/* Desktop Navigation Links */}
-          <nav class="hidden md:flex items-center gap-6">
-            <Link to="/guilds" class="text-sm font-semibold text-slate-300 hover:text-white transition-colors">Find Guilds</Link>
-            <Link to="/players" class="text-sm font-semibold text-slate-300 hover:text-white transition-colors">Recruit Players</Link>
-            <Link to="/about" class="text-sm font-semibold text-slate-300 hover:text-white transition-colors">About</Link>
+          <nav className="hidden md:flex items-center gap-6">
+            <Link to="/guilds" className="text-sm font-semibold text-slate-300 hover:text-white transition-colors">Find Guilds</Link>
+            <Link to="/players" className="text-sm font-semibold text-slate-300 hover:text-white transition-colors">Recruit Players</Link>
+            <Link to="/about" className="text-sm font-semibold text-slate-300 hover:text-white transition-colors">About</Link>
             
             {user ? (
               <>
-                <Link to="/dashboard" class="text-sm font-semibold text-slate-300 hover:text-white transition-colors">Dashboard</Link>
-                <Link to="/matches" class="text-sm font-semibold text-slate-300 hover:text-white flex items-center gap-1.5 transition-colors">
-                  <MessageSquare class="h-4 w-4" /> Matches
+                <Link to="/dashboard" className="text-sm font-semibold text-slate-300 hover:text-white transition-colors">Dashboard</Link>
+                <Link to="/matches" className="text-sm font-semibold text-slate-300 hover:text-white flex items-center gap-1.5 transition-colors">
+                  <MessageSquare className="h-4 w-4" /> Matches
                 </Link>
-                <Link to="/notifications" class="relative text-sm font-semibold text-slate-300 hover:text-white transition-colors">
-                  <Bell class="h-4 w-4" />
+                <Link to="/notifications" className="relative text-sm font-semibold text-slate-300 hover:text-white transition-colors">
+                  <Bell className="h-4 w-4" />
                   {unreadNotifications > 0 && (
-                    <span class="absolute -top-2 -right-2 bg-accent text-[9px] font-extrabold text-white h-4 w-4 rounded-full flex items-center justify-center border-2 border-charcoal-dark shadow-glow-purple">
+                    <span className="absolute -top-2 -right-2 bg-accent text-[9px] font-extrabold text-white h-4 w-4 rounded-full flex items-center justify-center border-2 border-charcoal-dark shadow-glow-purple">
                       {unreadNotifications}
                     </span>
                   )}
                 </Link>
-                <div class="h-4 w-px bg-charcoal-light"></div>
-                <Link to="/settings" class="text-sm font-semibold text-slate-300 hover:text-white flex items-center gap-1 transition-colors">
-                  <UserIcon class="h-4 w-4" /> {user.username}
+                <div className="h-4 w-px bg-charcoal-light"></div>
+                <Link to="/settings" className="text-sm font-semibold text-slate-300 hover:text-white flex items-center gap-1 transition-colors">
+                  <UserIcon className="h-4 w-4" /> {user.username}
                 </Link>
-                <button onClick={logout} class="text-sm font-semibold text-rose-400 hover:text-rose-300 flex items-center gap-1 transition-colors">
-                  <LogOut class="h-4 w-4" /> Logout
+                <button onClick={logout} className="text-sm font-semibold text-rose-400 hover:text-rose-300 flex items-center gap-1 transition-colors">
+                  <LogOut className="h-4 w-4" /> Logout
                 </button>
               </>
             ) : (
               <>
-                <Link to="/login" class="text-sm font-semibold text-slate-300 hover:text-white transition-colors">Login</Link>
-                <Link to="/register" class="bg-accent hover:bg-accent-dark text-white px-4 py-2 rounded-xl text-sm font-bold shadow-glow-purple hover:scale-105 active:scale-95 transition-all">
+                <Link to="/login" className="text-sm font-semibold text-slate-300 hover:text-white transition-colors">Login</Link>
+                <Link to="/register" className="bg-accent hover:bg-accent-dark text-white px-4 py-2 rounded-xl text-sm font-bold shadow-glow-purple hover:scale-105 active:scale-95 transition-all">
                   Register
                 </Link>
               </>
@@ -284,12 +284,12 @@ const NavigationHeader: React.FC<NavigationHeaderProps> = ({ unreadNotifications
           </nav>
 
           {/* Mobile Menu button */}
-          <div class="flex md:hidden">
+          <div className="flex md:hidden">
             <button 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              class="text-slate-300 hover:text-white p-2 rounded-lg"
+              className="text-slate-300 hover:text-white p-2 rounded-lg"
             >
-              {mobileMenuOpen ? <X class="h-6 w-6" /> : <Menu class="h-6 w-6" />}
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
         </div>
@@ -297,26 +297,26 @@ const NavigationHeader: React.FC<NavigationHeaderProps> = ({ unreadNotifications
 
       {/* Mobile Menu Options */}
       {mobileMenuOpen && (
-        <div class="md:hidden bg-charcoal border-b border-charcoal-light px-4 pt-2 pb-4 space-y-2">
-          <Link to="/guilds" onClick={() => setMobileMenuOpen(false)} class="block px-3 py-2 rounded-lg text-base font-semibold text-slate-300 hover:bg-charcoal-light hover:text-white">Find Guilds</Link>
-          <Link to="/players" onClick={() => setMobileMenuOpen(false)} class="block px-3 py-2 rounded-lg text-base font-semibold text-slate-300 hover:bg-charcoal-light hover:text-white">Recruit Players</Link>
-          <Link to="/about" onClick={() => setMobileMenuOpen(false)} class="block px-3 py-2 rounded-lg text-base font-semibold text-slate-300 hover:bg-charcoal-light hover:text-white">About</Link>
+        <div className="md:hidden bg-charcoal border-b border-charcoal-light px-4 pt-2 pb-4 space-y-2">
+          <Link to="/guilds" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-lg text-base font-semibold text-slate-300 hover:bg-charcoal-light hover:text-white">Find Guilds</Link>
+          <Link to="/players" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-lg text-base font-semibold text-slate-300 hover:bg-charcoal-light hover:text-white">Recruit Players</Link>
+          <Link to="/about" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-lg text-base font-semibold text-slate-300 hover:bg-charcoal-light hover:text-white">About</Link>
           
           {user ? (
             <>
-              <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} class="block px-3 py-2 rounded-lg text-base font-semibold text-slate-300 hover:bg-charcoal-light hover:text-white">Dashboard</Link>
-              <Link to="/matches" onClick={() => setMobileMenuOpen(false)} class="block px-3 py-2 rounded-lg text-base font-semibold text-slate-300 hover:bg-charcoal-light hover:text-white flex items-center gap-1.5"><MessageSquare class="h-4 w-4" /> Matches</Link>
-              <Link to="/notifications" onClick={() => setMobileMenuOpen(false)} class="block px-3 py-2 rounded-lg text-base font-semibold text-slate-300 hover:bg-charcoal-light hover:text-white flex items-center gap-1.5">
-                <Bell class="h-4 w-4" /> Notifications
-                {unreadNotifications > 0 && <span class="bg-accent text-white px-2 py-0.5 rounded-full text-xs font-bold">{unreadNotifications}</span>}
+              <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-lg text-base font-semibold text-slate-300 hover:bg-charcoal-light hover:text-white">Dashboard</Link>
+              <Link to="/matches" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-lg text-base font-semibold text-slate-300 hover:bg-charcoal-light hover:text-white flex items-center gap-1.5"><MessageSquare className="h-4 w-4" /> Matches</Link>
+              <Link to="/notifications" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-lg text-base font-semibold text-slate-300 hover:bg-charcoal-light hover:text-white flex items-center gap-1.5">
+                <Bell className="h-4 w-4" /> Notifications
+                {unreadNotifications > 0 && <span className="bg-accent text-white px-2 py-0.5 rounded-full text-xs font-bold">{unreadNotifications}</span>}
               </Link>
-              <Link to="/settings" onClick={() => setMobileMenuOpen(false)} class="block px-3 py-2 rounded-lg text-base font-semibold text-slate-300 hover:bg-charcoal-light hover:text-white flex items-center gap-1.5"><UserIcon class="h-4 w-4" /> {user.username}</Link>
-              <button onClick={() => { logout(); setMobileMenuOpen(false); }} class="w-full text-left px-3 py-2 rounded-lg text-base font-semibold text-rose-400 hover:bg-charcoal-light flex items-center gap-1.5"><LogOut class="h-4 w-4" /> Logout</button>
+              <Link to="/settings" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-lg text-base font-semibold text-slate-300 hover:bg-charcoal-light hover:text-white flex items-center gap-1.5"><UserIcon className="h-4 w-4" /> {user.username}</Link>
+              <button onClick={() => { logout(); setMobileMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-lg text-base font-semibold text-rose-400 hover:bg-charcoal-light flex items-center gap-1.5"><LogOut className="h-4 w-4" /> Logout</button>
             </>
           ) : (
             <>
-              <Link to="/login" onClick={() => setMobileMenuOpen(false)} class="block px-3 py-2 rounded-lg text-base font-semibold text-slate-300 hover:bg-charcoal-light hover:text-white">Login</Link>
-              <Link to="/register" onClick={() => setMobileMenuOpen(false)} class="block text-center bg-accent text-white px-4 py-2 rounded-xl text-base font-bold shadow-glow-purple">Register</Link>
+              <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-lg text-base font-semibold text-slate-300 hover:bg-charcoal-light hover:text-white">Login</Link>
+              <Link to="/register" onClick={() => setMobileMenuOpen(false)} className="block text-center bg-accent text-white px-4 py-2 rounded-xl text-base font-bold shadow-glow-purple">Register</Link>
             </>
           )}
         </div>
@@ -327,12 +327,12 @@ const NavigationHeader: React.FC<NavigationHeaderProps> = ({ unreadNotifications
 
 const Footer: React.FC = () => {
   return (
-    <footer class="bg-charcoal-dark border-t border-charcoal-light py-8">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center md:flex md:justify-between md:items-center">
-        <p class="text-sm text-slate-500">© 2026 GuildPing. Real-time WoW recruitment platform. All rights reserved.</p>
-        <div class="mt-4 md:mt-0 flex justify-center gap-6">
-          <Link to="/about" class="text-xs text-slate-400 hover:text-white transition-colors">About Us</Link>
-          <a href="https://github.com/ShortyWoW" target="_blank" rel="noreferrer" class="text-xs text-slate-400 hover:text-white transition-colors">Github</a>
+    <footer className="bg-charcoal-dark border-t border-charcoal-light py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center md:flex md:justify-between md:items-center">
+        <p className="text-sm text-slate-500">© 2026 GuildPing. Real-time WoW recruitment platform. All rights reserved.</p>
+        <div className="mt-4 md:mt-0 flex justify-center gap-6">
+          <Link to="/about" className="text-xs text-slate-400 hover:text-white transition-colors">About Us</Link>
+          <a href="https://github.com/ShortyWoW" target="_blank" rel="noreferrer" className="text-xs text-slate-400 hover:text-white transition-colors">Github</a>
         </div>
       </div>
     </footer>

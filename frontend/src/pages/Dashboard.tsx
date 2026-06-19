@@ -132,9 +132,9 @@ const Dashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div class="flex-grow flex items-center justify-center bg-charcoal-dark text-white">
-        <div class="animate-pulse flex items-center gap-2">
-          <Clock class="animate-spin h-5 w-5 text-accent" />
+      <div className="flex-grow flex items-center justify-center bg-charcoal-dark text-white">
+        <div className="animate-pulse flex items-center gap-2">
+          <Clock className="animate-spin h-5 w-5 text-accent" />
           <span>Loading recruitment metrics...</span>
         </div>
       </div>
@@ -142,67 +142,67 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div class="bg-charcoal-dark min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
+    <div className="bg-charcoal-dark min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
       {/* Welcome Header */}
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-charcoal-light pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-charcoal-light pb-6">
         <div>
-          <h1 class="text-3xl font-black text-white">Welcome back, {user?.username}</h1>
-          <p class="text-slate-400 text-sm">Manage your profiles, incoming recruitment offers, and active chats.</p>
+          <h1 className="text-3xl font-black text-white">Welcome back, {user?.username}</h1>
+          <p className="text-slate-400 text-sm">Manage your profiles, incoming recruitment offers, and active chats.</p>
         </div>
-        <div class="flex flex-wrap gap-3">
-          <Link to="/guilds" class="bg-accent hover:bg-accent-dark text-white px-5 py-3 rounded-xl text-sm font-bold shadow-glow-purple flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-all">
-            <Search class="h-4 w-4" /> Find a Guild
+        <div className="flex flex-wrap gap-3">
+          <Link to="/guilds" className="bg-accent hover:bg-accent-dark text-white px-5 py-3 rounded-xl text-sm font-bold shadow-glow-purple flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-all">
+            <Search className="h-4 w-4" /> Find a Guild
           </Link>
-          <Link to="/players" class="bg-charcoal border border-charcoal-light hover:border-slate-400 text-white px-5 py-3 rounded-xl text-sm font-bold flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-all">
-            <Plus class="h-4 w-4" /> Recruit Players
+          <Link to="/players" className="bg-charcoal border border-charcoal-light hover:border-slate-400 text-white px-5 py-3 rounded-xl text-sm font-bold flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-all">
+            <Plus className="h-4 w-4" /> Recruit Players
           </Link>
         </div>
       </div>
 
       {/* Grid Dashboard columns */}
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
         {/* Left Column: Player Profiles */}
-        <div class="space-y-6">
-          <div class="flex items-center justify-between border-b border-charcoal-light pb-3">
-            <h3 class="text-xl font-bold text-white flex items-center gap-2">
-              <Sparkles class="h-5 w-5 text-accent" /> My Player Characters
+        <div className="space-y-6">
+          <div className="flex items-center justify-between border-b border-charcoal-light pb-3">
+            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-accent" /> My Player Characters
             </h3>
-            <Link to="/players/create" class="text-xs font-bold text-accent-light hover:text-accent flex items-center gap-1">
-              <Plus class="h-3.5 w-3.5" /> Create Profile
+            <Link to="/players/create" className="text-xs font-bold text-accent-light hover:text-accent flex items-center gap-1">
+              <Plus className="h-3.5 w-3.5" /> Create Profile
             </Link>
           </div>
 
           {players.length === 0 ? (
-            <div class="bg-charcoal border border-charcoal-light rounded-2xl p-8 text-center space-y-4">
-              <p class="text-slate-400 text-sm">You haven't listed any WoW characters yet. Get discovered by guild recruiters.</p>
-              <Link to="/players/create" class="inline-flex bg-accent hover:bg-accent-dark text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-glow-purple">
+            <div className="bg-charcoal border border-charcoal-light rounded-2xl p-8 text-center space-y-4">
+              <p className="text-slate-400 text-sm">You haven't listed any WoW characters yet. Get discovered by guild recruiters.</p>
+              <Link to="/players/create" className="inline-flex bg-accent hover:bg-accent-dark text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-glow-purple">
                 Create Player Profile
               </Link>
             </div>
           ) : (
-            <div class="space-y-4">
+            <div className="space-y-4">
               {players.map(player => (
-                <div key={player.id} class="bg-charcoal border border-charcoal-light rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 glow-card">
-                  <div class="space-y-2">
-                    <div class="flex items-center gap-2">
-                      <span class="text-lg font-black text-white">{player.character_name}</span>
-                      <span class="text-xs text-slate-400">@{player.realm} ({player.region})</span>
+                <div key={player.id} className="bg-charcoal border border-charcoal-light rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 glow-card">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg font-black text-white">{player.character_name}</span>
+                      <span className="text-xs text-slate-400">@{player.realm} ({player.region})</span>
                     </div>
-                    <div class="flex flex-wrap gap-2 text-xs">
-                      <span class="px-2 py-0.5 rounded bg-charcoal-dark border border-charcoal-light text-slate-300">
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      <span className="px-2 py-0.5 rounded bg-charcoal-dark border border-charcoal-light text-slate-300">
                         {player.spec_name} {player.class_name}
                       </span>
-                      <span class="px-2 py-0.5 rounded bg-charcoal-dark border border-charcoal-light text-slate-300">
+                      <span className="px-2 py-0.5 rounded bg-charcoal-dark border border-charcoal-light text-slate-300">
                         {player.role}
                       </span>
-                      <span class="px-2 py-0.5 rounded bg-emerald-950/40 border border-emerald-500/40 text-emerald-400 font-bold">
+                      <span className="px-2 py-0.5 rounded bg-emerald-950/40 border border-emerald-500/40 text-emerald-400 font-bold">
                         {player.recruitment_status}
                       </span>
                     </div>
                   </div>
-                  <Link to={`/players/edit/${player.id}`} class="bg-charcoal-dark border border-charcoal-light hover:border-slate-400 text-white p-2 rounded-xl flex items-center justify-center shrink-0">
-                    <Edit2 class="h-4 w-4" />
+                  <Link to={`/players/edit/${player.id}`} className="bg-charcoal-dark border border-charcoal-light hover:border-slate-400 text-white p-2 rounded-xl flex items-center justify-center shrink-0">
+                    <Edit2 className="h-4 w-4" />
                   </Link>
                 </div>
               ))}
@@ -211,43 +211,43 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Right Column: Guild Recruitment */}
-        <div class="space-y-6">
-          <div class="flex items-center justify-between border-b border-charcoal-light pb-3">
-            <h3 class="text-xl font-bold text-white flex items-center gap-2">
-              <Shield class="h-5 w-5 text-accent" /> My Guilds & Recruitment
+        <div className="space-y-6">
+          <div className="flex items-center justify-between border-b border-charcoal-light pb-3">
+            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+              <Shield className="h-5 w-5 text-accent" /> My Guilds & Recruitment
             </h3>
-            <Link to="/guilds/create" class="text-xs font-bold text-accent-light hover:text-accent flex items-center gap-1">
-              <Plus class="h-3.5 w-3.5" /> Create Guild Profile
+            <Link to="/guilds/create" className="text-xs font-bold text-accent-light hover:text-accent flex items-center gap-1">
+              <Plus className="h-3.5 w-3.5" /> Create Guild Profile
             </Link>
           </div>
 
           {guilds.length === 0 ? (
-            <div class="bg-charcoal border border-charcoal-light rounded-2xl p-8 text-center space-y-4">
-              <p class="text-slate-400 text-sm">No guilds registered. Create a guild profile to recruit raiders instantly.</p>
-              <Link to="/guilds/create" class="inline-flex bg-accent hover:bg-accent-dark text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-glow-purple">
+            <div className="bg-charcoal border border-charcoal-light rounded-2xl p-8 text-center space-y-4">
+              <p className="text-slate-400 text-sm">No guilds registered. Create a guild profile to recruit raiders instantly.</p>
+              <Link to="/guilds/create" className="inline-flex bg-accent hover:bg-accent-dark text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-glow-purple">
                 Create Guild Profile
               </Link>
             </div>
           ) : (
-            <div class="space-y-4">
+            <div className="space-y-4">
               {guilds.map(guild => (
-                <div key={guild.id} class="bg-charcoal border border-charcoal-light rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 glow-card">
-                  <div class="space-y-2">
-                    <div class="flex items-center gap-2">
-                      <span class="text-lg font-black text-white">&lt;{guild.guild_name}&gt;</span>
-                      <span class="text-xs text-slate-400">@{guild.realm} ({guild.region})</span>
+                <div key={guild.id} className="bg-charcoal border border-charcoal-light rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 glow-card">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg font-black text-white">&lt;{guild.guild_name}&gt;</span>
+                      <span className="text-xs text-slate-400">@{guild.realm} ({guild.region})</span>
                     </div>
-                    <div class="flex flex-wrap gap-2 text-xs">
-                      <span class="px-2 py-0.5 rounded bg-charcoal-dark border border-charcoal-light text-slate-300">
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      <span className="px-2 py-0.5 rounded bg-charcoal-dark border border-charcoal-light text-slate-300">
                         {guild.progression_label}
                       </span>
-                      <span class="px-2 py-0.5 rounded bg-emerald-950/40 border border-emerald-500/40 text-emerald-400 font-bold">
+                      <span className="px-2 py-0.5 rounded bg-emerald-950/40 border border-emerald-500/40 text-emerald-400 font-bold">
                         {guild.recruitment_status}
                       </span>
                     </div>
                   </div>
-                  <Link to={`/guilds/edit/${guild.id}`} class="bg-charcoal-dark border border-charcoal-light hover:border-slate-400 text-white p-2 rounded-xl flex items-center justify-center shrink-0">
-                    <Edit2 class="h-4 w-4" />
+                  <Link to={`/guilds/edit/${guild.id}`} className="bg-charcoal-dark border border-charcoal-light hover:border-slate-400 text-white p-2 rounded-xl flex items-center justify-center shrink-0">
+                    <Edit2 className="h-4 w-4" />
                   </Link>
                 </div>
               ))}
@@ -258,28 +258,28 @@ const Dashboard: React.FC = () => {
 
       {/* Notifications / Interests Box */}
       {interests.length > 0 && (
-        <div class="bg-charcoal border border-charcoal-light rounded-2xl p-6 space-y-4">
-          <h4 class="text-lg font-bold text-white flex items-center gap-2">
+        <div className="bg-charcoal border border-charcoal-light rounded-2xl p-6 space-y-4">
+          <h4 className="text-lg font-bold text-white flex items-center gap-2">
             Incoming Recruitment Offers ({interests.length})
           </h4>
-          <div class="divide-y divide-charcoal-light">
+          <div className="divide-y divide-charcoal-light">
             {interests.map(item => (
-              <div key={item.id} class="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div class="text-sm">
-                  <p class="text-slate-200 font-medium">{item.body}</p>
+              <div key={item.id} className="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="text-sm">
+                  <p className="text-slate-200 font-medium">{item.body}</p>
                 </div>
-                <div class="flex gap-2">
+                <div className="flex gap-2">
                   <button 
                     onClick={() => handleAcceptInterest(item.id)}
-                    class="bg-accent hover:bg-accent-dark text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-glow-purple flex items-center gap-1"
+                    className="bg-accent hover:bg-accent-dark text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-glow-purple flex items-center gap-1"
                   >
-                    <Check class="h-3.5 w-3.5" /> Accept
+                    <Check className="h-3.5 w-3.5" /> Accept
                   </button>
                   <button 
                     onClick={() => handleDeclineInterest(item.id)}
-                    class="bg-charcoal-dark border border-charcoal-light hover:border-slate-400 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
+                    className="bg-charcoal-dark border border-charcoal-light hover:border-slate-400 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
                   >
-                    <X class="h-3.5 w-3.5" /> Decline
+                    <X className="h-3.5 w-3.5" /> Decline
                   </button>
                 </div>
               </div>

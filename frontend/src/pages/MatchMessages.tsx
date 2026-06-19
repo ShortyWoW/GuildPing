@@ -166,9 +166,9 @@ const MatchMessages: React.FC = () => {
 
   if (loading) {
     return (
-      <div class="flex-grow flex items-center justify-center bg-charcoal-dark text-white">
-        <div class="animate-pulse flex items-center gap-2">
-          <Clock class="animate-spin h-5 w-5 text-accent" />
+      <div className="flex-grow flex items-center justify-center bg-charcoal-dark text-white">
+        <div className="animate-pulse flex items-center gap-2">
+          <Clock className="animate-spin h-5 w-5 text-accent" />
           <span>Opening secure comms channel...</span>
         </div>
       </div>
@@ -177,11 +177,11 @@ const MatchMessages: React.FC = () => {
 
   if (error || !match) {
     return (
-      <div class="flex-grow flex flex-col items-center justify-center bg-charcoal-dark text-white p-6 space-y-4">
-        <AlertCircle class="h-10 w-10 text-rose-500" />
-        <h3 class="text-lg font-bold">Access Denied</h3>
-        <p class="text-xs text-slate-400 max-w-sm text-center">{error || "You are not a member of this recruitment match."}</p>
-        <Link to="/matches" class="bg-charcoal border border-charcoal-light px-4 py-2 rounded-xl text-xs font-bold text-white">
+      <div className="flex-grow flex flex-col items-center justify-center bg-charcoal-dark text-white p-6 space-y-4">
+        <AlertCircle className="h-10 w-10 text-rose-500" />
+        <h3 className="text-lg font-bold">Access Denied</h3>
+        <p className="text-xs text-slate-400 max-w-sm text-center">{error || "You are not a member of this recruitment match."}</p>
+        <Link to="/matches" className="bg-charcoal border border-charcoal-light px-4 py-2 rounded-xl text-xs font-bold text-white">
           Back to Matches
         </Link>
       </div>
@@ -192,27 +192,27 @@ const MatchMessages: React.FC = () => {
   const otherPartyName = isUserPlayer ? `<${match.guild_profile.guild_name}> Recruiter` : `${match.player_profile.character_name} (${match.player_profile.spec_name} ${match.player_profile.class_name})`
 
   return (
-    <div class="bg-charcoal-dark flex-grow flex flex-col min-h-[calc(100vh-4rem)] max-w-5xl mx-auto w-full border-x border-charcoal-light">
+    <div className="bg-charcoal-dark flex-grow flex flex-col min-h-[calc(100vh-4rem)] max-w-5xl mx-auto w-full border-x border-charcoal-light">
       {/* Top Header */}
-      <div class="bg-charcoal border-b border-charcoal-light p-4 flex items-center justify-between sticky top-16 z-30">
-        <div class="flex items-center gap-3">
-          <button onClick={() => navigate("/matches")} class="bg-charcoal-dark border border-charcoal-light text-slate-400 hover:text-white p-2 rounded-xl transition-colors">
-            <ArrowLeft class="h-4 w-4" />
+      <div className="bg-charcoal border-b border-charcoal-light p-4 flex items-center justify-between sticky top-16 z-30">
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate("/matches")} className="bg-charcoal-dark border border-charcoal-light text-slate-400 hover:text-white p-2 rounded-xl transition-colors">
+            <ArrowLeft className="h-4 w-4" />
           </button>
           
           <div>
-            <h3 class="text-sm font-bold text-white flex items-center gap-1.5">
+            <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
               {isUserPlayer ? (
                 <>
-                  <Shield class="h-4 w-4 text-accent" /> &lt;{match.guild_profile.guild_name}&gt;
+                  <Shield className="h-4 w-4 text-accent" /> &lt;{match.guild_profile.guild_name}&gt;
                 </>
               ) : (
                 <>
-                  <User class="h-4 w-4 text-accent" /> {match.player_profile.character_name}
+                  <User className="h-4 w-4 text-accent" /> {match.player_profile.character_name}
                 </>
               )}
             </h3>
-            <p class="text-[10px] text-slate-400">
+            <p className="text-[10px] text-slate-400">
               {isUserPlayer 
                 ? `Raid Progression: ${match.guild_profile.progression_label} @${match.guild_profile.realm}` 
                 : `${match.player_profile.spec_name} ${match.player_profile.class_name} @${match.player_profile.realm}`
@@ -223,24 +223,24 @@ const MatchMessages: React.FC = () => {
 
         <button 
           onClick={() => fetchMessages(false)}
-          class="text-slate-400 hover:text-white p-2 rounded-xl transition-colors hover:bg-charcoal-dark"
+          className="text-slate-400 hover:text-white p-2 rounded-xl transition-colors hover:bg-charcoal-dark"
           title="Refresh Messages"
         >
-          <RefreshCw class="h-4 w-4" />
+          <RefreshCw className="h-4 w-4" />
         </button>
       </div>
 
       {/* Messages Scroll Area */}
-      <div class="flex-grow p-4 overflow-y-auto space-y-4 max-h-[calc(100vh-14rem)] min-h-[300px]">
-        <div class="text-center p-3 bg-charcoal/30 border border-charcoal-light/50 rounded-xl max-w-sm mx-auto">
-          <p class="text-[10px] text-slate-400">
+      <div className="flex-grow p-4 overflow-y-auto space-y-4 max-h-[calc(100vh-14rem)] min-h-[300px]">
+        <div className="text-center p-3 bg-charcoal/30 border border-charcoal-light/50 rounded-xl max-w-sm mx-auto">
+          <p className="text-[10px] text-slate-400">
             Secure match chat initiated. Discuss raid days, specs, trial logs, and expectations.
           </p>
         </div>
 
         {messages.length === 0 ? (
-          <div class="text-center text-xs text-slate-500 py-12 flex flex-col items-center gap-2">
-            <MessageSquare class="h-8 w-8 text-charcoal-light" />
+          <div className="text-center text-xs text-slate-500 py-12 flex flex-col items-center gap-2">
+            <MessageSquare className="h-8 w-8 text-charcoal-light" />
             <span>Send a message to start the conversation!</span>
           </div>
         ) : (
@@ -250,15 +250,15 @@ const MatchMessages: React.FC = () => {
             return (
               <div 
                 key={msg.id} 
-                class={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
+                className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
               >
-                <div class={`max-w-md rounded-2xl px-4 py-2.5 text-sm ${
+                <div className={`max-w-md rounded-2xl px-4 py-2.5 text-sm ${
                   isMe 
                     ? 'bg-accent text-white rounded-br-none shadow-glow-purple' 
                     : 'bg-charcoal border border-charcoal-light text-slate-200 rounded-bl-none'
                 }`}>
-                  <p class="whitespace-pre-wrap break-words">{msg.body}</p>
-                  <div class={`text-[8px] mt-1 text-right flex items-center justify-end gap-1 ${
+                  <p className="whitespace-pre-wrap break-words">{msg.body}</p>
+                  <div className={`text-[8px] mt-1 text-right flex items-center justify-end gap-1 ${
                     isMe ? 'text-purple-200' : 'text-slate-500'
                   }`}>
                     <span>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -275,20 +275,20 @@ const MatchMessages: React.FC = () => {
       </div>
 
       {/* Message Input Panel */}
-      <form onSubmit={handleSendMessage} class="bg-charcoal border-t border-charcoal-light p-4 flex gap-3 sticky bottom-0 z-30">
+      <form onSubmit={handleSendMessage} className="bg-charcoal border-t border-charcoal-light p-4 flex gap-3 sticky bottom-0 z-30">
         <input 
           type="text"
           value={newMessage}
           onChange={e => setNewMessage(e.target.value)}
           placeholder={`Message ${otherPartyName}...`}
-          class="flex-grow bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
+          className="flex-grow bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
         />
         <button
           type="submit"
           disabled={sending || !newMessage.trim()}
-          class="bg-accent hover:bg-accent-dark disabled:bg-charcoal border border-accent/20 text-white p-3 rounded-xl transition-all shadow-glow-purple flex items-center justify-center shrink-0"
+          className="bg-accent hover:bg-accent-dark disabled:bg-charcoal border border-accent/20 text-white p-3 rounded-xl transition-all shadow-glow-purple flex items-center justify-center shrink-0"
         >
-          <Send class="h-4 w-4" />
+          <Send className="h-4 w-4" />
         </button>
       </form>
     </div>

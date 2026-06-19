@@ -6,7 +6,7 @@ const About: React.FC = () => {
     <div className="bg-charcoal-dark min-h-screen py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto space-y-12">
         <div className="text-center space-y-4">
-          <h1 className="text-4xl font-black text-white">About GuildPing</h1>
+          <h1 className="text-4xl font-black text-white">About Guild<span className="text-accent">Ping</span></h1>
           <p className="text-lg text-slate-300 max-w-2xl mx-auto">
             Bridging the gap between active players and guild recruiters through instant, real-time feedback loops.
           </p>

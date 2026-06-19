@@ -257,7 +257,7 @@ const NavigationHeader: React.FC<NavigationHeaderProps> = ({ unreadNotifications
           <div className="flex items-center gap-2">
             <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2 group">
               <div className="h-9 w-9 rounded-xl bg-accent flex items-center justify-center font-extrabold text-white text-glow-purple">GP</div>
-              <span className="text-lg font-black tracking-wider text-white group-hover:text-accent transition-colors">GUILDPING</span>
+              <span className="text-lg font-black tracking-wider text-white transition-colors">GUILD<span className="text-accent">PING</span></span>
             </Link>
           </div>
 

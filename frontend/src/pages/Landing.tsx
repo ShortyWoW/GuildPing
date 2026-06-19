@@ -48,7 +48,7 @@ const Landing: React.FC = () => {
       {/* Feature Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center space-y-3 mb-16">
-          <h2 className="text-3xl font-extrabold text-white">Why GuildPing?</h2>
+          <h2 className="text-3xl font-extrabold text-white">Why Guild<span className="text-accent">Ping</span>?</h2>
           <p className="text-slate-400 max-w-2xl mx-auto">We streamline recruitment down to direct connections and instant real-time conversations.</p>
         </div>
 

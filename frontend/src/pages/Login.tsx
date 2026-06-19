@@ -48,7 +48,7 @@ const Login: React.FC = () => {
           <div className="inline-flex h-12 w-12 rounded-xl bg-accent/20 items-center justify-center text-accent mb-4">
             <Sparkles className="h-6 w-6 text-glow-purple" />
           </div>
-          <h2 className="text-3xl font-extrabold text-white">Login to GuildPing</h2>
+          <h2 className="text-3xl font-extrabold text-white">Login to Guild<span className="text-accent">Ping</span></h2>
           <p className="mt-2 text-sm text-slate-400">
             Or{' '}
             <Link to="/register" className="font-bold text-accent-light hover:text-accent transition-colors">

@@ -33,12 +33,21 @@ interface Interest {
   body: string
 }
 
+interface Match {
+  id: number
+  status: string
+  created_at: string
+  player_profile: { id: number; character_name: string; realm: string; class_name: string; spec_name: string }
+  guild_profile: { id: number; guild_name: string; realm: string; progression_label: string }
+}
+
 const Dashboard: React.FC = () => {
   const { token, user } = useAuth()
   const navigate = useNavigate()
   const [players, setPlayers] = useState<PlayerProfile[]>([])
   const [guilds, setGuilds] = useState<GuildProfile[]>([])
   const [interests, setInterests] = useState<Interest[]>([])
+  const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -84,6 +93,13 @@ const Dashboard: React.FC = () => {
                 body: n.body
               }))
             setInterests(incomingInterests)
+          }
+
+          // Fetch active matches
+          const mRes = await fetch("/api/matches", { headers })
+          if (mRes.ok) {
+            const allMatches = await mRes.json()
+            setMatches(allMatches)
           }
         }
       } catch (err) {
@@ -253,6 +269,39 @@ const Dashboard: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Active Matches & Chats Quick Links */}
+      {matches.length > 0 && (
+        <div className="bg-charcoal border border-charcoal-light rounded-2xl p-6 space-y-4">
+          <h4 className="text-lg font-bold text-white flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-accent" /> Active Matches & Chat Rooms ({matches.length})
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {matches.map(m => (
+              <Link 
+                key={m.id}
+                to={`/matches/${m.id}/messages`}
+                className="bg-charcoal-dark border border-charcoal-light hover:border-slate-500 p-4 rounded-xl flex items-center justify-between gap-3 transition-all hover:scale-[1.01] group"
+              >
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-slate-400">
+                    {m.player_profile.character_name} <span className="text-[10px] font-normal">@{m.player_profile.realm}</span>
+                  </p>
+                  <p className="text-sm font-black text-white truncate mt-0.5">
+                    &lt;{m.guild_profile.guild_name}&gt;
+                  </p>
+                  <p className="text-[10px] text-slate-500 truncate mt-1">
+                    {m.guild_profile.progression_label}
+                  </p>
+                </div>
+                <div className="bg-accent/15 group-hover:bg-accent text-accent-light group-hover:text-white p-2 rounded-xl transition-colors">
+                  <MessageSquare className="h-4 w-4" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Notifications / Interests Box */}
       {interests.length > 0 && (

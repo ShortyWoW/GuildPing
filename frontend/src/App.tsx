@@ -48,6 +48,7 @@ export interface ToastMessage {
   id: string
   title: string
   body: string
+  payload?: any
 }
 
 export const App: React.FC = () => {
@@ -140,7 +141,10 @@ export const App: React.FC = () => {
           // Increment unread count
           setUnreadNotifications(prev => prev + 1)
           // Trigger floating toast
-          showToast(notification.title, notification.body)
+          showToast(notification.title, notification.body, notification.payload)
+          // Dispatch custom event for real-time pages to listen to
+          const eventObj = new CustomEvent("gp_ws_notification", { detail: notification })
+          window.dispatchEvent(eventObj)
         } catch (e) {
           console.error("Error parsing WebSocket message:", e)
         }
@@ -164,12 +168,20 @@ export const App: React.FC = () => {
     }
   }, [user, token])
 
-  const showToast = (title: string, body: string) => {
+  const showToast = (title: string, body: string, payload?: any) => {
     const id = Math.random().toString(36).substring(7)
-    setToasts(prev => [...prev, { id, title, body }])
+    setToasts(prev => [...prev, { id, title, body, payload }])
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id))
     }, 5000)
+  }
+
+  const handleToastClick = (toast: ToastMessage) => {
+    if (toast.payload?.match_id) {
+      window.location.href = `/matches/${toast.payload.match_id}/messages`
+    } else if (toast.payload?.interest_id) {
+      window.location.href = `/dashboard`
+    }
   }
 
   return (
@@ -209,9 +221,13 @@ export const App: React.FC = () => {
           {toasts.map(toast => (
             <div 
               key={toast.id} 
-              className="bg-charcoal border-l-4 border-accent text-white p-4 rounded-r-xl shadow-2xl border border-charcoal-light animate-bounce"
+              onClick={() => handleToastClick(toast)}
+              className="bg-charcoal border-l-4 border-accent text-white p-4 rounded-r-xl shadow-2xl border border-charcoal-light animate-bounce cursor-pointer hover:bg-charcoal-light/45 transition-colors"
             >
-              <h5 className="font-bold text-sm text-glow-purple">{toast.title}</h5>
+              <h5 className="font-bold text-sm text-glow-purple flex justify-between items-center">
+                {toast.title}
+                {toast.payload?.match_id && <span className="text-[9px] bg-accent/20 text-accent-light px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Chat</span>}
+              </h5>
               <p className="text-xs text-slate-300 mt-1">{toast.body}</p>
             </div>
           ))}

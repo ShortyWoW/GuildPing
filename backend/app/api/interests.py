@@ -1,6 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
+import httpx
+
+from app.core.config import settings
 
 from app.db.session import get_db
 from app.models.user import User
@@ -51,6 +54,75 @@ async def create_db_notification_and_push(
         
     except Exception as e:
         logger.error(f"Failed to create/push notification to user {user_id}: {e}")
+
+
+async def send_discord_webhook_notification(
+    webhook_url: str,
+    player_profile: PlayerProfile,
+    guild_profile: GuildProfile,
+    message: Optional[str] = None
+):
+    """
+    Asynchronously fires a Discord Webhook notification containing application details.
+    """
+    if not webhook_url:
+        return
+        
+    try:
+        class_lower = (player_profile.class_name or "").lower().strip()
+        color_map = {
+            "death knight": 12853051,   # #C41F3B
+            "demon hunter": 10694857,   # #A330C9
+            "druid": 16743690,          # #FF7D0A
+            "evoker": 3379967,          # #33937F
+            "hunter": 11261043,         # #ABD473
+            "mage": 4179947,            # #3FC7EB
+            "monk": 65432,              # #00FF98
+            "paladin": 16092346,        # #F58CBA
+            "priest": 16777215,         # #FFFFFF
+            "rogue": 16774505,          # #FFF569
+            "shaman": 28894,            # #0070DE
+            "warlock": 8882157,         # #8787ED
+            "warrior": 13081710,        # #C79C6E
+        }
+        color = color_map.get(class_lower, 10789024)
+        
+        # Build public URLs
+        site_url = getattr(settings, "PUBLIC_SITE_URL", "http://localhost:8080").rstrip("/")
+        # Embed fields
+        fields = [
+            {"name": "Realm (Region)", "value": f"{player_profile.realm} ({player_profile.region})", "inline": True},
+            {"name": "Class & Spec", "value": f"{player_profile.spec_name} {player_profile.class_name}", "inline": True},
+            {"name": "Item Level", "value": str(player_profile.item_level or "Unknown"), "inline": True},
+            {"name": "Role", "value": player_profile.role, "inline": True},
+        ]
+        
+        if message:
+            fields.append({"name": "Applicant Message", "value": message, "inline": False})
+            
+        payload = {
+            "embeds": [
+                {
+                    "title": f"New Applicant: {player_profile.character_name}",
+                    "description": f"A player has expressed interest in **<{guild_profile.guild_name}>** on GuildPing!",
+                    "url": f"{site_url}/dashboard",
+                    "color": color,
+                    "fields": fields,
+                    "footer": {
+                        "text": "GuildPing Recruitment Notification"
+                    },
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+            ]
+        }
+        
+        async with httpx.AsyncClient() as client:
+            res = await client.post(webhook_url, json=payload, timeout=4.0)
+            if res.status_code not in [200, 204]:
+                logger.warning(f"Discord webhook returned status code {res.status_code}: {res.text}")
+                
+    except Exception as e:
+        logger.error(f"Failed to send Discord webhook notification: {e}")
 
 
 @router.post("/player-to-guild", response_model=InterestResponse, status_code=status.HTTP_201_CREATED)
@@ -108,6 +180,15 @@ async def express_player_interest(
         db.refresh(interest)
         
     logger.info(f"Interest record created successfully (ID: {interest.id})")
+    
+    # Trigger Discord Webhook Notification (if configured)
+    if guild_profile.discord_webhook_url:
+        await send_discord_webhook_notification(
+            guild_profile.discord_webhook_url,
+            player_profile,
+            guild_profile,
+            interest_in.message
+        )
     
     # 4. Check for reciprocal interest (Guild-to-Player) that is PENDING
     reciprocal = db.query(Interest).filter(

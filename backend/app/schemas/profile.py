@@ -112,6 +112,7 @@ class GuildProfileCreate(BaseModel):
     description: Optional[str] = None
     discord_invite: Optional[str] = None
     website_url: Optional[str] = None
+    discord_webhook_url: Optional[str] = None
     visibility: str = "PUBLIC"
 
 class GuildProfileUpdate(BaseModel):
@@ -127,6 +128,7 @@ class GuildProfileUpdate(BaseModel):
     description: Optional[str] = None
     discord_invite: Optional[str] = None
     website_url: Optional[str] = None
+    discord_webhook_url: Optional[str] = None
     visibility: Optional[str] = None
 
 class GuildProfileResponse(BaseModel):
@@ -146,6 +148,7 @@ class GuildProfileResponse(BaseModel):
     description: Optional[str]
     discord_invite: Optional[str]
     website_url: Optional[str]
+    discord_webhook_url: Optional[str] = None
     visibility: str
     created_at: datetime
     updated_at: datetime

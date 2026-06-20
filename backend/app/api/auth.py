@@ -88,6 +88,28 @@ def get_current_user(
     return user
 
 
+def get_current_user_optional(
+    token: Optional[str] = Depends(oauth2_scheme), 
+    db: Session = Depends(get_db)
+) -> Optional[User]:
+    """
+    Optional authentication dependency.
+    """
+    if not token:
+        return None
+    try:
+        user_id = decode_access_token(token)
+        if user_id is None:
+            return None
+        user = db.query(User).filter(User.id == int(user_id)).first()
+        if user and user.is_active:
+            return user
+    except Exception:
+        pass
+    return None
+
+
+
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_217_CREATED if False else status.HTTP_201_CREATED)
 def register(user_in: UserCreate, db: Session = Depends(get_db)):
     """

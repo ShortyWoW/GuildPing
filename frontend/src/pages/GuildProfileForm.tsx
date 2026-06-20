@@ -34,6 +34,8 @@ const GuildProfileForm: React.FC = () => {
   const [description, setDescription] = useState("")
   const [discordInvite, setDiscordInvite] = useState("")
   const [websiteUrl, setWebsiteUrl] = useState("")
+  const [discordWebhookUrl, setDiscordWebhookUrl] = useState("")
+  const [showWebhook, setShowWebhook] = useState(false)
   const [visibility, setVisibility] = useState("PUBLIC")
   
   const [loading, setLoading] = useState(false)
@@ -76,6 +78,7 @@ const GuildProfileForm: React.FC = () => {
             setDescription(data.description || "")
             setDiscordInvite(data.discord_invite || "")
             setWebsiteUrl(data.website_url || "")
+            setDiscordWebhookUrl(data.discord_webhook_url || "")
             setVisibility(data.visibility)
           }
         } catch (err) {
@@ -138,6 +141,7 @@ const GuildProfileForm: React.FC = () => {
       description,
       discord_invite: discordInvite || null,
       website_url: websiteUrl || null,
+      discord_webhook_url: discordWebhookUrl || null,
       visibility
     }
 
@@ -441,6 +445,30 @@ const GuildProfileForm: React.FC = () => {
             placeholder="https://guildping.com"
             className="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
           />
+        </div>
+
+        {/* Discord Webhook Integration */}
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center justify-between">
+            <span>Discord Webhook URL (Application Notifications)</span>
+            <button
+              type="button"
+              onClick={() => setShowWebhook(!showWebhook)}
+              className="text-[10px] text-accent-light hover:text-accent font-bold uppercase tracking-wider"
+            >
+              {showWebhook ? "Hide Link" : "Show Link"}
+            </button>
+          </label>
+          <input
+            type={showWebhook ? "text" : "password"}
+            value={discordWebhookUrl}
+            onChange={e => setDiscordWebhookUrl(e.target.value)}
+            placeholder="https://discord.com/api/webhooks/..."
+            className="w-full bg-charcoal-dark border border-charcoal-light px-4 py-3 rounded-xl text-sm text-white focus:border-accent focus:outline-none"
+          />
+          <p className="text-[10px] text-slate-500 mt-1">
+            Incoming application interest/messages will be pushed directly to this Discord channel.
+          </p>
         </div>
 
         {/* Description */}

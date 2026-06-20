@@ -8,7 +8,7 @@ from app.db.session import get_db
 from app.models.user import User
 from app.models.profile import GuildProfile, PlayerProfile
 from app.schemas.profile import GuildProfileCreate, GuildProfileUpdate, GuildProfileResponse, GuildImportRequest
-from app.api.auth import get_current_user, get_localized_name
+from app.api.auth import get_current_user, get_localized_name, get_current_user_optional
 from app.core.logging import logger
 
 router = APIRouter(prefix="/guilds", tags=["guilds"])
@@ -42,6 +42,7 @@ def create_guild_profile(
         description=profile_in.description,
         discord_invite=profile_in.discord_invite,
         website_url=profile_in.website_url,
+        discord_webhook_url=profile_in.discord_webhook_url,
         visibility=profile_in.visibility
     )
     
@@ -63,6 +64,7 @@ def search_guilds(
     raid_day: Optional[int] = None,
     role_need: Optional[str] = None,  # e.g., "Tank", "Healer", "DPS"
     class_need: Optional[str] = None,  # e.g., "Mage", "Priest"
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db)
 ):
     """
@@ -108,11 +110,23 @@ def search_guilds(
             if class_need.lower() in [cls.lower() for cls in r.needs.get("classes", [])]
         ]
         
-    return results
+    # Serialize and scrub webhook URLs for non-owners
+    response_list = []
+    for r in results:
+        res_data = GuildProfileResponse.model_validate(r)
+        if not current_user or r.owner_user_id != current_user.id:
+            res_data.discord_webhook_url = None
+        response_list.append(res_data)
+        
+    return response_list
 
 
 @router.get("/{id}", response_model=GuildProfileResponse)
-def get_guild_profile(id: int, db: Session = Depends(get_db)):
+def get_guild_profile(
+    id: int, 
+    current_user: Optional[User] = Depends(get_current_user_optional),
+    db: Session = Depends(get_db)
+):
     """
     Retrieves a specific Guild Profile by its unique ID.
     """
@@ -120,7 +134,12 @@ def get_guild_profile(id: int, db: Session = Depends(get_db)):
     if not profile:
         logger.warning(f"Guild profile with ID {id} not found.")
         raise HTTPException(status_code=404, detail="Guild profile not found.")
-    return profile
+        
+    res_data = GuildProfileResponse.model_validate(profile)
+    if not current_user or profile.owner_user_id != current_user.id:
+        res_data.discord_webhook_url = None
+        
+    return res_data
 
 
 @router.put("/{id}", response_model=GuildProfileResponse)
@@ -308,7 +327,7 @@ async def get_importable_guilds(
         for sublist in results:
             for g in sublist:
                 key = (g["guild_name"].lower(), g["realm_slug"].lower(), g["region"].lower())
-                if key not in seen_guilds:
+                if key not in seen_guilds and g["rank"] == 0:
                     seen_guilds.add(key)
                     char_profile = next((c for c in verified_chars if c.character_name == g["character_name"]), None)
                     g["faction"] = char_profile.faction if char_profile else "Alliance"
@@ -414,6 +433,13 @@ async def import_guild_profile(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Character {req.character_name} is not a member of '{req.guild_name}' according to Blizzard APIs."
+        )
+
+    if rank != 0:
+        logger.warning(f"Unauthorized import attempt by user ID {current_user.id} using character {req.character_name} (rank {rank}) for guild {req.guild_name}")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the Guild Leader (Rank 0) is authorized to import and register this guild profile."
         )
 
     existing_guild = db.query(GuildProfile).filter(

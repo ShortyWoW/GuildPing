@@ -167,6 +167,7 @@ def blizzard_login():
     
     scope = "openid wow.profile"
     redirect_uri = f"{settings.PUBLIC_SITE_URL}/api/auth/blizzard/callback"
+    state = "guildping_auth_flow"
     
     auth_url = (
         "https://oauth.battle.net/authorize"
@@ -174,6 +175,7 @@ def blizzard_login():
         f"&redirect_uri={urllib.parse.quote(redirect_uri)}"
         f"&response_type=code"
         f"&scope={urllib.parse.quote(scope)}"
+        f"&state={state}"
     )
     
     logger.info("Redirecting user to Blizzard OAuth authorize page.")
@@ -181,7 +183,7 @@ def blizzard_login():
 
 
 @router.get("/blizzard/callback")
-async def blizzard_callback(code: str, db: Session = Depends(get_db)):
+async def blizzard_callback(code: str, state: Optional[str] = None, db: Session = Depends(get_db)):
     """
     Handles the redirect callback from Blizzard.
     Exchanges the authorization code for an access token,

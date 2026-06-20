@@ -6,6 +6,33 @@ from datetime import datetime, timezone
 from typing import Optional
 import httpx
 import urllib.parse
+import asyncio
+
+def get_localized_name(val) -> Optional[str]:
+    if not val:
+        return None
+    if isinstance(val, dict):
+        for locale in ["en_US", "en_GB", "de_DE", "es_ES", "fr_FR", "it_IT", "pl_PL", "ru_RU", "pt_BR", "ko_KR", "zh_TW", "zh_CN"]:
+            if locale in val:
+                return val[locale]
+        return next(iter(val.values()))
+    return str(val)
+
+async def fetch_char_media(client, region, realm_slug, name_slug, headers, params) -> Optional[str]:
+    media_url = f"https://{region}.api.blizzard.com/profile/wow/character/{realm_slug}/{name_slug}/character-media"
+    try:
+        res = await client.get(media_url, headers=headers, params=params, timeout=2.5)
+        if res.status_code == 200:
+            media_data = res.json()
+            assets = media_data.get("assets", [])
+            for asset in assets:
+                if asset.get("key") == "avatar":
+                    return asset.get("value")
+            if "avatar_url" in media_data:
+                return media_data["avatar_url"]
+    except Exception as e:
+        logger.warning(f"Failed to fetch media for {name_slug} on {realm_slug}: {e}")
+    return None
 
 from app.db.session import get_db
 from app.models.user import User
@@ -297,7 +324,6 @@ async def get_blizzard_characters(
             detail="Your account is not linked to Battle.net. Please login with Battle.net."
         )
         
-    # Region validation
     valid_regions = ["us", "eu", "kr", "tw"]
     if region.lower() not in valid_regions:
         raise HTTPException(
@@ -339,21 +365,44 @@ async def get_blizzard_characters(
             
             for account in data.get("wow_accounts", []):
                 for char in account.get("characters", []):
-                    c_info = char.get("character", {})
-                    playable_class = char.get("playable_class", {}) or c_info.get("playable_class", {})
-                    playable_race = char.get("playable_race", {}) or c_info.get("playable_race", {})
+                    c_info = char.get("character", {}) or {}
+                    playable_class = char.get("playable_class", {}) or c_info.get("playable_class", {}) or {}
+                    playable_race = char.get("playable_race", {}) or c_info.get("playable_race", {}) or {}
+                    realm_data = char.get("realm") or c_info.get("realm") or {}
                     
-                    characters.append({
-                        "id": c_info.get("id"),
-                        "name": c_info.get("name"),
-                        "level": char.get("level") or c_info.get("level"),
-                        "realm": {
-                            "name": c_info.get("realm", {}).get("name"),
-                            "slug": c_info.get("realm", {}).get("slug")
-                        },
-                        "class_name": playable_class.get("name"),
-                        "race_name": playable_race.get("name")
-                    })
+                    char_id = char.get("id") or c_info.get("id")
+                    char_name = get_localized_name(char.get("name")) or get_localized_name(c_info.get("name"))
+                    level = char.get("level") or c_info.get("level")
+                    realm_name = get_localized_name(realm_data.get("name"))
+                    realm_slug = realm_data.get("slug")
+                    class_name = get_localized_name(playable_class.get("name"))
+                    race_name = get_localized_name(playable_race.get("name"))
+                    
+                    if char_name and realm_slug:
+                        characters.append({
+                            "id": char_id,
+                            "name": char_name,
+                            "level": level,
+                            "realm": {
+                                "name": realm_name,
+                                "slug": realm_slug
+                            },
+                            "class_name": class_name,
+                            "race_name": race_name,
+                            "avatar_url": None
+                        })
+            
+            # Fetch avatar URLs in parallel
+            if characters:
+                tasks = []
+                for char in characters:
+                    r_slug = char["realm"]["slug"]
+                    n_slug = char["name"].lower().strip()
+                    tasks.append(fetch_char_media(client, region, r_slug, n_slug, headers, params))
+                
+                avatars = await asyncio.gather(*tasks)
+                for i, avatar in enumerate(avatars):
+                    characters[i]["avatar_url"] = avatar
                     
             return characters
             

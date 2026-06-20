@@ -38,6 +38,7 @@ class PlayerProfileCreate(BaseModel):
     bio: Optional[str] = None
     discord_handle: Optional[str] = None
     battle_tag: Optional[str] = None
+    avatar_url: Optional[str] = None
     visibility: str = "PUBLIC"
 
 class PlayerProfileUpdate(BaseModel):
@@ -57,6 +58,7 @@ class PlayerProfileUpdate(BaseModel):
     bio: Optional[str] = None
     discord_handle: Optional[str] = None
     battle_tag: Optional[str] = None
+    avatar_url: Optional[str] = None
     visibility: Optional[str] = None
 
 class PlayerProfileResponse(BaseModel):
@@ -80,6 +82,7 @@ class PlayerProfileResponse(BaseModel):
     bio: Optional[str]
     discord_handle: Optional[str]
     battle_tag: Optional[str]
+    avatar_url: Optional[str] = None
     visibility: str
     created_at: datetime
     updated_at: datetime

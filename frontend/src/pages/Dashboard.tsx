@@ -3,6 +3,27 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Sparkles, Plus, Edit2, Search, ArrowRight, MessageSquare, Check, X, Shield, Clock, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../App'
 
+export const CLASS_COLORS: Record<string, string> = {
+  "death knight": "#C41F3B",
+  "demon hunter": "#A330C9",
+  "druid": "#FF7D0A",
+  "evoker": "#33937F",
+  "hunter": "#ABD473",
+  "mage": "#3FC7EB",
+  "monk": "#00FF96",
+  "paladin": "#F58CBA",
+  "priest": "#FFFFFF",
+  "rogue": "#FFF569",
+  "shaman": "#0070DE",
+  "warlock": "#8787ED",
+  "warrior": "#C79C6E"
+};
+
+export const getClassColor = (className: string) => {
+  if (!className) return "#A3A3A3";
+  return CLASS_COLORS[className.toLowerCase()] || "#A3A3A3";
+};
+
 interface PlayerProfile {
   id: number
   character_name: string
@@ -15,6 +36,7 @@ interface PlayerProfile {
   item_level?: number | null
   is_verified: boolean
   blizzard_character_id?: number | null
+  avatar_url?: string | null
   recruitment_status: string
   goals: string[]
 }
@@ -304,50 +326,79 @@ const Dashboard: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {players.map(player => (
-                <div key={player.id} className="bg-charcoal border border-charcoal-light rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 glow-card">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg font-black text-white flex items-center gap-1.5">
-                        {player.character_name}
-                        {player.is_verified && (
-                          <span title="Verified character from Blizzard APIs" className="inline-flex">
-                            <ShieldCheck className="h-4.5 w-4.5 text-[#00aeff] drop-shadow-[0_0_5px_rgba(0,174,255,0.5)]" />
-                          </span>
-                        )}
-                      </span>
-                      <span className="text-xs text-slate-400">@{player.realm} ({player.region})</span>
-                      {!player.is_verified && user?.battlenet_id && (
-                        <button
-                          onClick={() => handleVerifyCharacter(player.id)}
-                          className="text-[10px] text-slate-400 hover:text-[#00aeff] underline font-semibold transition-colors bg-none border-none outline-none cursor-pointer"
+              {players.map(player => {
+                const classColor = getClassColor(player.class_name);
+                return (
+                  <div 
+                    key={player.id} 
+                    className="border rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all hover:shadow-[0_4px_25px_rgba(0,0,0,0.4)]"
+                    style={{
+                      background: `linear-gradient(135deg, ${classColor}0A 0%, rgba(20, 20, 20, 0.95) 100%)`,
+                      borderColor: `${classColor}22`,
+                      boxShadow: `0 4px 20px rgba(0,0,0,0.2), inset 0 0 12px ${classColor}05`
+                    }}
+                  >
+                    <div className="flex items-center gap-4 flex-grow">
+                      {player.avatar_url ? (
+                        <img 
+                          src={player.avatar_url} 
+                          alt={player.character_name} 
+                          className="h-12 w-12 rounded-xl object-cover border-2 shadow-md shrink-0"
+                          style={{ borderColor: classColor }}
+                        />
+                      ) : (
+                        <div 
+                          className="h-12 w-12 rounded-xl border flex items-center justify-center font-bold text-sm shrink-0"
+                          style={{ borderColor: `${classColor}44`, backgroundColor: `${classColor}11`, color: classColor }}
                         >
-                          Verify Ownership
-                        </button>
+                          {player.character_name ? player.character_name.substring(0, 2).toUpperCase() : "?"}
+                        </div>
                       )}
+                      
+                      <div className="space-y-2 flex-grow">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-lg font-black flex items-center gap-1.5" style={{ color: classColor }}>
+                            {player.character_name}
+                            {player.is_verified && (
+                              <span title="Verified character from Blizzard APIs" className="inline-flex">
+                                <ShieldCheck className="h-4.5 w-4.5 text-[#00aeff] drop-shadow-[0_0_5px_rgba(0,174,255,0.5)]" />
+                              </span>
+                            )}
+                          </span>
+                          <span className="text-xs text-slate-400">@{player.realm} ({player.region})</span>
+                          {!player.is_verified && user?.battlenet_id && (
+                            <button
+                              onClick={() => handleVerifyCharacter(player.id)}
+                              className="text-[10px] text-slate-400 hover:text-[#00aeff] underline font-semibold transition-colors bg-none border-none outline-none cursor-pointer"
+                            >
+                              Verify Ownership
+                            </button>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-2 text-xs">
+                          <span className="px-2 py-0.5 rounded bg-charcoal-dark border border-charcoal-light font-semibold" style={{ color: classColor }}>
+                            {player.spec_name} {player.class_name}
+                          </span>
+                          {player.item_level ? (
+                            <span className="px-2 py-0.5 rounded bg-charcoal-dark border border-charcoal-light text-wow-gold font-bold">
+                              {player.item_level} iLvl
+                            </span>
+                          ) : null}
+                          <span className="px-2 py-0.5 rounded bg-charcoal-dark border border-charcoal-light text-slate-300">
+                            {player.role}
+                          </span>
+                          <span className="px-2 py-0.5 rounded bg-emerald-950/40 border border-emerald-500/40 text-emerald-400 font-bold">
+                            {player.recruitment_status}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-2 text-xs">
-                      <span className="px-2 py-0.5 rounded bg-charcoal-dark border border-charcoal-light text-slate-300">
-                        {player.spec_name} {player.class_name}
-                      </span>
-                      {player.item_level ? (
-                        <span className="px-2 py-0.5 rounded bg-charcoal-dark border border-charcoal-light text-wow-gold font-bold">
-                          {player.item_level} iLvl
-                        </span>
-                      ) : null}
-                      <span className="px-2 py-0.5 rounded bg-charcoal-dark border border-charcoal-light text-slate-300">
-                        {player.role}
-                      </span>
-                      <span className="px-2 py-0.5 rounded bg-emerald-950/40 border border-emerald-500/40 text-emerald-400 font-bold">
-                        {player.recruitment_status}
-                      </span>
-                    </div>
+                    <Link to={`/players/edit/${player.id}`} className="bg-charcoal-dark border border-charcoal-light hover:border-slate-400 text-white p-2.5 rounded-xl flex items-center justify-center shrink-0 transition-colors">
+                      <Edit2 className="h-4 w-4" />
+                    </Link>
                   </div>
-                  <Link to={`/players/edit/${player.id}`} className="bg-charcoal-dark border border-charcoal-light hover:border-slate-400 text-white p-2 rounded-xl flex items-center justify-center shrink-0">
-                    <Edit2 className="h-4 w-4" />
-                  </Link>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -521,17 +572,46 @@ const Dashboard: React.FC = () => {
                   No active characters found in this region for your Battle.net account.
                 </div>
               ) : (
-                importingCharacters.map(char => (
-                  <div key={char.id} className="bg-charcoal-dark border border-charcoal-light p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                      <div className="font-bold text-white text-sm flex items-center gap-2">
-                        {char.name}
-                        <span className="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded font-normal">Level {char.level}</span>
+                importingCharacters.map(char => {
+                  const classColor = getClassColor(char.class_name);
+                  return (
+                    <div 
+                      key={char.id} 
+                      className="border rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all"
+                      style={{
+                        background: `linear-gradient(135deg, ${classColor}0A 0%, rgba(20, 20, 20, 0.95) 100%)`,
+                        borderColor: `${classColor}22`,
+                        boxShadow: `0 4px 20px rgba(0,0,0,0.2), inset 0 0 12px ${classColor}05`
+                      }}
+                    >
+                      <div className="flex items-center gap-3.5 flex-grow">
+                        {char.avatar_url ? (
+                          <img 
+                            src={char.avatar_url} 
+                            alt={char.name} 
+                            className="h-12 w-12 rounded-xl object-cover border-2 shadow-md shrink-0"
+                            style={{ borderColor: classColor }}
+                          />
+                        ) : (
+                          <div 
+                            className="h-12 w-12 rounded-xl border flex items-center justify-center font-bold text-sm shrink-0"
+                            style={{ borderColor: `${classColor}44`, backgroundColor: `${classColor}11`, color: classColor }}
+                          >
+                            {char.name ? char.name.substring(0, 2).toUpperCase() : "?"}
+                          </div>
+                        )}
+                        <div>
+                          <div className="font-bold text-base flex items-center gap-2">
+                            <span style={{ color: classColor }}>{char.name}</span>
+                            <span className="text-[10px] bg-charcoal border border-charcoal-light text-slate-300 px-1.5 py-0.5 rounded-full font-semibold">Level {char.level}</span>
+                          </div>
+                          <div className="text-xs text-slate-400 mt-0.5 flex items-center gap-1.5">
+                            <span>{char.realm.name}</span>
+                            <span className="text-slate-600">&bull;</span>
+                            <span style={{ color: classColor }} className="font-semibold">{char.class_name || "WoW Character"}</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-xs text-slate-400 mt-0.5">
-                        {char.realm.name} &bull; {char.class_name || "WoW Character"}
-                      </div>
-                    </div>
                     
                     <div className="flex items-center gap-2.5">
                       <select
@@ -556,7 +636,8 @@ const Dashboard: React.FC = () => {
                       </button>
                     </div>
                   </div>
-                ))
+                );
+              })
               )}
             </div>
 

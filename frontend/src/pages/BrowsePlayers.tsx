@@ -3,6 +3,27 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Search, Shield, Filter, Calendar, MapPin, Award, CheckCircle, MessageSquare, Plus, Clock, Users, Send, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../App'
 
+export const CLASS_COLORS: Record<string, string> = {
+  "death knight": "#C41F3B",
+  "demon hunter": "#A330C9",
+  "druid": "#FF7D0A",
+  "evoker": "#33937F",
+  "hunter": "#ABD473",
+  "mage": "#3FC7EB",
+  "monk": "#00FF96",
+  "paladin": "#F58CBA",
+  "priest": "#FFFFFF",
+  "rogue": "#FFF569",
+  "shaman": "#0070DE",
+  "warlock": "#8787ED",
+  "warrior": "#C79C6E"
+};
+
+export const getClassColor = (className: string) => {
+  if (!className) return "#A3A3A3";
+  return CLASS_COLORS[className.toLowerCase()] || "#A3A3A3";
+};
+
 interface PlayerProfile {
   id: number
   character_name: string
@@ -15,6 +36,7 @@ interface PlayerProfile {
   item_level?: number
   is_verified: boolean
   blizzard_character_id?: number | null
+  avatar_url?: string | null
   recruitment_status: string
   goals: string[]
   availability: {
@@ -403,95 +425,124 @@ const BrowsePlayers: React.FC = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-6">
-              {players.map(player => (
-                <div key={player.id} className="bg-charcoal border border-charcoal-light rounded-2xl p-6 hover:border-charcoal-light transition-all flex flex-col md:flex-row md:items-start justify-between gap-6 glow-card">
-                  {/* Player details */}
-                  <div className="space-y-4 flex-grow">
-                    <div className="flex flex-wrap items-center gap-2.5">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        player.faction === 'Alliance' 
-                          ? 'bg-blue-950/40 border border-blue-500/40 text-blue-400' 
-                          : player.faction === 'Horde' 
-                          ? 'bg-red-950/40 border border-red-500/40 text-red-400' 
-                          : 'bg-purple-950/40 border border-purple-500/40 text-purple-400'
-                      }`}>
-                        {player.faction}
-                      </span>
-                      <h3 className="text-xl font-black text-white flex items-center gap-1.5">
-                        {player.character_name}
-                        {player.is_verified && (
-                          <span title="Verified character from Blizzard APIs" className="inline-flex">
-                            <ShieldCheck className="h-4.5 w-4.5 text-[#00aeff] drop-shadow-[0_0_5px_rgba(0,174,255,0.5)]" />
-                          </span>
-                        )}
-                      </h3>
-                      <span className="text-xs text-slate-400 flex items-center gap-1">
-                        <MapPin className="h-3 w-3" /> {player.realm} ({player.region})
-                      </span>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-4 text-xs">
-                      <span className="px-2 py-0.5 rounded bg-charcoal-dark border border-charcoal-light text-slate-300 font-semibold">
-                        {player.spec_name} {player.class_name}
-                      </span>
-                      <span className="px-2 py-0.5 rounded bg-charcoal-dark border border-charcoal-light text-slate-300">
-                        {player.role}
-                      </span>
-                      
-                      {player.item_level && (
-                        <span className="text-slate-300 font-bold">
-                          ilvl {player.item_level}
-                        </span>
-                      )}
-                      
-                      <span className="px-2 py-0.5 rounded bg-emerald-950/40 border border-emerald-500/40 text-emerald-400 font-bold text-[10px]">
-                        {player.recruitment_status}
-                      </span>
-
-                      {/* Availability */}
-                      {player.availability?.days && (
-                        <div className="flex items-center gap-1.5 text-slate-400">
-                          <Calendar className="h-3.5 w-3.5" />
-                          <span>
-                            {player.availability.days.map(d => DAYS_OF_WEEK[d].substring(0, 3)).join(", ")} @ {player.availability.start_time}-{player.availability.end_time} {player.availability.timezone}
-                          </span>
+              {players.map(player => {
+                const classColor = getClassColor(player.class_name);
+                return (
+                  <div 
+                    key={player.id} 
+                    className="border rounded-2xl p-6 transition-all flex flex-col md:flex-row md:items-start justify-between gap-6 hover:shadow-[0_4px_25px_rgba(0,0,0,0.4)]"
+                    style={{
+                      background: `linear-gradient(135deg, ${classColor}0A 0%, rgba(20, 20, 20, 0.95) 100%)`,
+                      borderColor: `${classColor}22`,
+                      boxShadow: `0 4px 20px rgba(0,0,0,0.2), inset 0 0 12px ${classColor}05`
+                    }}
+                  >
+                    {/* Player details */}
+                    <div className="flex items-start gap-4 flex-grow">
+                      {player.avatar_url ? (
+                        <img 
+                          src={player.avatar_url} 
+                          alt={player.character_name} 
+                          className="h-12 w-12 rounded-xl object-cover border-2 shadow-md shrink-0 mt-1"
+                          style={{ borderColor: classColor }}
+                        />
+                      ) : (
+                        <div 
+                          className="h-12 w-12 rounded-xl border flex items-center justify-center font-bold text-sm shrink-0 mt-1"
+                          style={{ borderColor: `${classColor}44`, backgroundColor: `${classColor}11`, color: classColor }}
+                        >
+                          {player.character_name ? player.character_name.substring(0, 2).toUpperCase() : "?"}
                         </div>
                       )}
-                    </div>
-
-                    {player.bio && (
-                      <p className="text-xs text-slate-400 line-clamp-2 max-w-2xl">{player.bio}</p>
-                    )}
-
-                    {/* Transfers, Faction change and Goals */}
-                    <div className="space-y-2">
-                      <div className="flex flex-wrap gap-1.5 items-center">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mr-1">Raid Goals:</span>
-                        {player.goals?.map(g => (
-                          <span key={g} className="bg-charcoal-dark px-2.5 py-0.5 rounded text-[10px] text-slate-300 border border-charcoal-light">
-                            {g}
+                      
+                      <div className="space-y-4 flex-grow">
+                        <div className="flex flex-wrap items-center gap-2.5">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            player.faction === 'Alliance' 
+                              ? 'bg-blue-950/40 border border-blue-500/40 text-blue-400' 
+                              : player.faction === 'Horde' 
+                              ? 'bg-red-950/40 border border-red-500/40 text-red-400' 
+                              : 'bg-purple-950/40 border border-purple-500/40 text-purple-400'
+                          }`}>
+                            {player.faction}
                           </span>
-                        ))}
-                      </div>
+                          <h3 className="text-xl font-black flex items-center gap-1.5" style={{ color: classColor }}>
+                            {player.character_name}
+                            {player.is_verified && (
+                              <span title="Verified character from Blizzard APIs" className="inline-flex">
+                                <ShieldCheck className="h-4.5 w-4.5 text-[#00aeff] drop-shadow-[0_0_5px_rgba(0,174,255,0.5)]" />
+                              </span>
+                            )}
+                          </h3>
+                          <span className="text-xs text-slate-400 flex items-center gap-1">
+                            <MapPin className="h-3 w-3" /> {player.realm} ({player.region})
+                          </span>
+                        </div>
 
-                      <div className="flex flex-wrap gap-3 text-[10px] font-bold text-slate-400">
-                        <span>Transfer: <strong className={player.transfer_willing ? "text-emerald-400" : "text-slate-500"}>{player.transfer_willing ? "Willing" : "No"}</strong></span>
-                        <span>Faction Change: <strong className={player.faction_change_willing ? "text-emerald-400" : "text-slate-500"}>{player.faction_change_willing ? "Willing" : "No"}</strong></span>
+                        <div className="flex flex-wrap items-center gap-4 text-xs">
+                          <span className="px-2 py-0.5 rounded bg-charcoal-dark border border-charcoal-light font-semibold" style={{ color: classColor }}>
+                            {player.spec_name} {player.class_name}
+                          </span>
+                          <span className="px-2 py-0.5 rounded bg-charcoal-dark border border-charcoal-light text-slate-300">
+                            {player.role}
+                          </span>
+                          
+                          {player.item_level && (
+                            <span className="text-slate-300 font-bold">
+                              ilvl {player.item_level}
+                            </span>
+                          )}
+                          
+                          <span className="px-2 py-0.5 rounded bg-emerald-950/40 border border-emerald-500/40 text-emerald-400 font-bold text-[10px]">
+                            {player.recruitment_status}
+                          </span>
+
+                          {/* Availability */}
+                          {player.availability?.days && (
+                            <div className="flex items-center gap-1.5 text-slate-400">
+                              <Calendar className="h-3.5 w-3.5" />
+                              <span>
+                                {player.availability.days.map(d => DAYS_OF_WEEK[d].substring(0, 3)).join(", ")} @ {player.availability.start_time}-{player.availability.end_time} {player.availability.timezone}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        {player.bio && (
+                          <p className="text-xs text-slate-400 line-clamp-2 max-w-2xl">{player.bio}</p>
+                        )}
+
+                        {/* Transfers, Faction change and Goals */}
+                        <div className="space-y-2">
+                          <div className="flex flex-wrap gap-1.5 items-center">
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mr-1">Raid Goals:</span>
+                            {player.goals?.map(g => (
+                              <span key={g} className="bg-charcoal-dark px-2.5 py-0.5 rounded text-[10px] text-slate-300 border border-charcoal-light">
+                                {g}
+                              </span>
+                            ))}
+                          </div>
+
+                          <div className="flex flex-wrap gap-3 text-[10px] font-bold text-slate-400">
+                            <span>Transfer: <strong className={player.transfer_willing ? "text-emerald-400" : "text-slate-500"}>{player.transfer_willing ? "Willing" : "No"}</strong></span>
+                            <span>Faction Change: <strong className={player.faction_change_willing ? "text-emerald-400" : "text-slate-500"}>{player.faction_change_willing ? "Willing" : "No"}</strong></span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Actions column */}
-                  <div className="flex md:flex-col items-stretch justify-center gap-2 shrink-0 md:w-36">
-                    <button
-                      onClick={() => openInterestModal(player)}
-                      className="flex-grow bg-accent hover:bg-accent-dark text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-glow-purple flex items-center justify-center gap-1.5 transition-all"
-                    >
-                      <Send className="h-3.5 w-3.5" /> Recruit Raider
-                    </button>
+                    {/* Actions column */}
+                    <div className="flex md:flex-col items-stretch justify-center gap-2 shrink-0 md:w-36">
+                      <button
+                        onClick={() => openInterestModal(player)}
+                        className="flex-grow bg-accent hover:bg-accent-dark text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-glow-purple flex items-center justify-center gap-1.5 transition-all"
+                      >
+                        <Send className="h-3.5 w-3.5" /> Recruit Raider
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

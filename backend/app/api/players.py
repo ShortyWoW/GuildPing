@@ -279,6 +279,22 @@ async def import_player_profile(
                 )
             
             data = res.json()
+            
+            # Query character media for avatar URL
+            media_url = f"https://{region}.api.blizzard.com/profile/wow/character/{realm_slug}/{character_name_slug}/character-media"
+            avatar_url = None
+            try:
+                media_res = await client.get(media_url, headers=headers, params=params)
+                if media_res.status_code == 200:
+                    media_data = media_res.json()
+                    for asset in media_data.get("assets", []):
+                        if asset.get("key") == "avatar":
+                            avatar_url = asset.get("value")
+                            break
+                    if not avatar_url and "avatar_url" in media_data:
+                        avatar_url = media_data["avatar_url"]
+            except Exception as e:
+                logger.warning(f"Failed to fetch avatar during import: {e}")
         except HTTPException:
             raise
         except Exception as e:
@@ -320,6 +336,7 @@ async def import_player_profile(
         item_level=item_level,
         is_verified=True,
         blizzard_character_id=char_id,
+        avatar_url=avatar_url,
         recruitment_status="LOOKING",
         goals=["Mythic"],
         availability=availability_dict,

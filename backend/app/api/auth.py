@@ -391,7 +391,9 @@ async def get_blizzard_characters(
                             "race_name": race_name,
                             "avatar_url": None
                         })
-            
+            # Sort characters by level descending (big to small)
+            characters.sort(key=lambda c: c.get("level") or 0, reverse=True)
+
             # Fetch avatar URLs in parallel
             if characters:
                 tasks = []

@@ -419,7 +419,25 @@ async def get_blizzard_characters(
             )
 
 @router.get("/debug-bnet")
-async def debug_bnet(current_user: User = Depends(get_current_user)):
+async def debug_bnet(
+    token: Optional[str] = None,
+    header_token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+):
+    active_token = token or header_token
+    if not active_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing token. Pass it via query param ?token=... or Authorization header"
+        )
+    user_id = decode_access_token(active_token)
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="Invalid token")
+        
+    current_user = db.query(User).filter(User.id == int(user_id)).first()
+    if not current_user:
+        raise HTTPException(status_code=401, detail="User not found")
+        
     if not current_user.battlenet_access_token:
         return {"error": "No battlenet token"}
     

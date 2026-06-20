@@ -187,35 +187,54 @@ def delete_guild_profile(
 
 
 async def fetch_character_guilds(client, region, realm_slug, name_slug, headers, params, char_name):
-    url = f"https://{region}.api.blizzard.com/profile/wow/character/{realm_slug}/{name_slug}/guild-membership"
+    url = f"https://{region}.api.blizzard.com/profile/wow/character/{realm_slug}/{name_slug}"
     try:
         res = await client.get(url, headers=headers, params=params, timeout=3.0)
         if res.status_code == 200:
-            data = res.json()
-            guilds_list = []
-            for membership in data.get("guild_memberships", []):
-                guild = membership.get("guild", {})
-                guild_name = get_localized_name(guild.get("name"))
-                guild_id = guild.get("id")
-                realm_data = guild.get("realm", {})
-                guild_realm_name = get_localized_name(realm_data.get("name"))
-                guild_realm_slug = realm_data.get("slug")
-                rank = membership.get("rank", 99)
+            char_data = res.json()
+            guild_data = char_data.get("guild")
+            if not guild_data:
+                return []
                 
-                rank_name = "Guild Leader" if rank == 0 else "Officer" if rank <= 4 else "Member"
-                
-                if guild_name and guild_realm_slug:
-                    guilds_list.append({
-                        "guild_name": guild_name,
-                        "guild_id": guild_id,
-                        "realm": guild_realm_name,
-                        "realm_slug": guild_realm_slug,
-                        "region": region.upper(),
-                        "rank": rank,
-                        "rank_name": rank_name,
-                        "character_name": char_name
-                    })
-            return guilds_list
+            guild_name = get_localized_name(guild_data.get("name"))
+            guild_id = guild_data.get("id")
+            guild_realm = guild_data.get("realm", {})
+            guild_realm_name = get_localized_name(guild_realm.get("name"))
+            guild_realm_slug = guild_realm.get("slug")
+            
+            # Default rank
+            rank = 99
+            rank_name = "Member"
+            
+            # Query guild roster to find actual rank
+            guild_href = guild_data.get("key", {}).get("href", "")
+            if guild_href:
+                base_href = guild_href.split("?")[0]
+                roster_url = f"{base_href}/roster"
+                try:
+                    roster_res = await client.get(roster_url, headers=headers, params=params, timeout=3.0)
+                    if roster_res.status_code == 200:
+                        roster_data = roster_res.json()
+                        for member_entry in roster_data.get("members", []):
+                            member_char = member_entry.get("character", {})
+                            if member_char.get("id") == char_data.get("id") or member_char.get("name", "").lower() == char_name.lower():
+                                rank = member_entry.get("rank", 99)
+                                rank_name = "Guild Leader" if rank == 0 else "Officer" if rank <= 4 else "Member"
+                                break
+                except Exception as roster_err:
+                    logger.warning(f"Roster check failed: {roster_err}")
+            
+            if guild_name and guild_realm_slug:
+                return [{
+                    "guild_name": guild_name,
+                    "guild_id": guild_id,
+                    "realm": guild_realm_name,
+                    "realm_slug": guild_realm_slug,
+                    "region": region.upper(),
+                    "rank": rank,
+                    "rank_name": rank_name,
+                    "character_name": char_name
+                }]
     except Exception as e:
         logger.warning(f"Failed to fetch guild membership for {name_slug} on {realm_slug}: {e}")
     return []
@@ -307,7 +326,7 @@ async def import_guild_profile(
     realm_slug = req.realm_slug.lower().strip().replace(" ", "-").replace("'", "")
     character_name_slug = req.character_name.lower().strip()
 
-    url = f"https://{region}.api.blizzard.com/profile/wow/character/{realm_slug}/{character_name_slug}/guild-membership"
+    url = f"https://{region}.api.blizzard.com/profile/wow/character/{realm_slug}/{character_name_slug}"
     headers = {
         "Authorization": f"Bearer {current_user.battlenet_access_token}"
     }
@@ -322,14 +341,27 @@ async def import_guild_profile(
         try:
             res = await client.get(url, headers=headers, params=params)
             if res.status_code == 200:
-                data = res.json()
-                for membership in data.get("guild_memberships", []):
-                    guild = membership.get("guild", {})
-                    g_id = guild.get("id")
-                    if g_id == req.guild_id:
-                        is_member = True
-                        rank = membership.get("rank", 99)
-                        break
+                char_data = res.json()
+                guild_data = char_data.get("guild")
+                if guild_data and guild_data.get("id") == req.guild_id:
+                    is_member = True
+                    
+                    # Try to fetch actual rank from roster
+                    guild_href = guild_data.get("key", {}).get("href", "")
+                    if guild_href:
+                        base_href = guild_href.split("?")[0]
+                        roster_url = f"{base_href}/roster"
+                        try:
+                            roster_res = await client.get(roster_url, headers=headers, params=params, timeout=3.0)
+                            if roster_res.status_code == 200:
+                                roster_data = roster_res.json()
+                                for member_entry in roster_data.get("members", []):
+                                    member_char = member_entry.get("character", {})
+                                    if member_char.get("id") == char_data.get("id") or member_char.get("name", "").lower() == req.character_name.lower():
+                                        rank = member_entry.get("rank", 99)
+                                        break
+                        except Exception as roster_err:
+                            logger.warning(f"Roster check failed during import: {roster_err}")
         except Exception as e:
             logger.error(f"Error checking guild membership via Blizzard API: {e}")
             raise HTTPException(

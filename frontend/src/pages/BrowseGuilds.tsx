@@ -43,6 +43,15 @@ const DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "F
 const GOAL_OPTIONS = ["Casual", "AOTC", "Mythic", "Cutting Edge", "Mythic+"]
 const ROLE_OPTIONS = ["Tank", "Healer", "DPS"]
 
+export const getFactionColor = (faction: string) => {
+  if (!faction) return "#A3A3A3";
+  const f = faction.toLowerCase();
+  if (f === 'alliance') return '#0078FF';
+  if (f === 'horde') return '#C41F3B';
+  return '#A330C9'; // Cross-Faction (purple)
+};
+
+
 const BrowseGuilds: React.FC = () => {
   const { token, user } = useAuth()
   const navigate = useNavigate()
@@ -377,8 +386,18 @@ const BrowseGuilds: React.FC = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-6">
-              {guilds.map(guild => (
-                <div key={guild.id} className="bg-charcoal border border-charcoal-light rounded-2xl p-6 hover:border-charcoal-light transition-all flex flex-col md:flex-row md:items-start justify-between gap-6 glow-card">
+              {guilds.map(guild => {
+                const factionColor = getFactionColor(guild.faction);
+                return (
+                  <div 
+                    key={guild.id} 
+                    className="border rounded-2xl p-6 transition-all flex flex-col md:flex-row md:items-start justify-between gap-6 hover:shadow-[0_4px_25px_rgba(0,0,0,0.4)]"
+                    style={{
+                      background: `linear-gradient(135deg, ${factionColor}0A 0%, rgba(20, 20, 20, 0.95) 100%)`,
+                      borderColor: `${factionColor}22`,
+                      boxShadow: `0 4px 20px rgba(0,0,0,0.2), inset 0 0 12px ${factionColor}05`
+                    }}
+                  >
                   {/* Guild details */}
                   <div className="space-y-4 flex-grow">
                     <div className="flex flex-wrap items-center gap-2">
@@ -483,8 +502,8 @@ const BrowseGuilds: React.FC = () => {
                       </a>
                     )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

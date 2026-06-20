@@ -24,6 +24,15 @@ export const getClassColor = (className: string) => {
   return CLASS_COLORS[className.toLowerCase()] || "#A3A3A3";
 };
 
+export const getFactionColor = (faction: string) => {
+  if (!faction) return "#A3A3A3";
+  const f = faction.toLowerCase();
+  if (f === 'alliance') return '#0078FF';
+  if (f === 'horde') return '#C41F3B';
+  return '#A330C9'; // Cross-Faction (purple)
+};
+
+
 interface PlayerProfile {
   id: number
   character_name: string
@@ -506,34 +515,45 @@ const Dashboard: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {guilds.map(guild => (
-                <div key={guild.id} className="bg-charcoal border border-charcoal-light rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 glow-card">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg font-black text-white flex items-center gap-1.5">
-                        &lt;{guild.guild_name}&gt;
-                        {guild.is_verified && (
-                          <span title="Verified guild from Blizzard APIs" className="inline-flex">
-                            <ShieldCheck className="h-4.5 w-4.5 text-[#00aeff] drop-shadow-[0_0_5px_rgba(0,174,255,0.5)]" />
-                          </span>
-                        )}
-                      </span>
-                      <span className="text-xs text-slate-400">@{guild.realm} ({guild.region})</span>
+              {guilds.map(guild => {
+                const factionColor = getFactionColor(guild.faction);
+                return (
+                  <div 
+                    key={guild.id} 
+                    className="border rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all hover:shadow-[0_4px_25px_rgba(0,0,0,0.4)]"
+                    style={{
+                      background: `linear-gradient(135deg, ${factionColor}0A 0%, rgba(20, 20, 20, 0.95) 100%)`,
+                      borderColor: `${factionColor}22`,
+                      boxShadow: `0 4px 20px rgba(0,0,0,0.2), inset 0 0 12px ${factionColor}05`
+                    }}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-black text-white flex items-center gap-1.5">
+                          &lt;{guild.guild_name}&gt;
+                          {guild.is_verified && (
+                            <span title="Verified guild from Blizzard APIs" className="inline-flex">
+                              <ShieldCheck className="h-4.5 w-4.5 text-[#00aeff] drop-shadow-[0_0_5px_rgba(0,174,255,0.5)]" />
+                            </span>
+                          )}
+                        </span>
+                        <span className="text-xs text-slate-400">@{guild.realm} ({guild.region})</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2 text-xs">
+                        <span className="px-2 py-0.5 rounded bg-charcoal-dark border border-charcoal-light text-slate-300">
+                          {guild.progression_label}
+                        </span>
+                        <span className="px-2 py-0.5 rounded bg-emerald-950/40 border border-emerald-500/40 text-emerald-400 font-bold">
+                          {guild.recruitment_status}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-2 text-xs">
-                      <span className="px-2 py-0.5 rounded bg-charcoal-dark border border-charcoal-light text-slate-300">
-                        {guild.progression_label}
-                      </span>
-                      <span className="px-2 py-0.5 rounded bg-emerald-950/40 border border-emerald-500/40 text-emerald-400 font-bold">
-                        {guild.recruitment_status}
-                      </span>
-                    </div>
+                    <Link to={`/guilds/edit/${guild.id}`} className="bg-charcoal-dark border border-charcoal-light hover:border-slate-400 text-white p-2 rounded-xl flex items-center justify-center shrink-0">
+                      <Edit2 className="h-4 w-4" />
+                    </Link>
                   </div>
-                  <Link to={`/guilds/edit/${guild.id}`} className="bg-charcoal-dark border border-charcoal-light hover:border-slate-400 text-white p-2 rounded-xl flex items-center justify-center shrink-0">
-                    <Edit2 className="h-4 w-4" />
-                  </Link>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

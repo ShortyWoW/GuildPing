@@ -502,8 +502,9 @@ const BrowseGuilds: React.FC = () => {
                       </a>
                     )}
                   </div>
-                );
-              })}
+                </div>
+              );
+            })}
             </div>
           )}
         </div>

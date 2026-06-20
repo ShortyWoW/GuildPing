@@ -234,10 +234,17 @@ async def fetch_character_guilds(client, region, realm_slug, name_slug, headers,
                                 member_char = member_entry.get("character", {})
                                 if member_char.get("id") == char_data.get("id") or member_char.get("name", "").lower() == char_name.lower():
                                     rank = member_entry.get("rank", 99)
-                                    rank_name = "Guild Leader" if rank == 0 else "Officer" if rank <= 4 else "Member"
+                                    rank_name = "Guild Leader" if rank == 0 else "Officer" if rank <= 2 else "Member"
                                     break
+                        elif roster_res.status_code == 404:
+                            # If roster is 404 due to new guild latency, default the importer to Guild Leader
+                            rank = 0
+                            rank_name = "Guild Leader"
                     except Exception as roster_err:
                         logger.warning(f"Roster check failed: {roster_err}")
+                        # Fallback for connection/API errors to allow registration
+                        rank = 0
+                        rank_name = "Guild Leader"
             
             if guild_name and guild_realm_slug:
                 return [{
@@ -389,8 +396,13 @@ async def import_guild_profile(
                                         if member_char.get("id") == char_data.get("id") or member_char.get("name", "").lower() == req.character_name.lower():
                                             rank = member_entry.get("rank", 99)
                                             break
+                                elif roster_res.status_code == 404:
+                                    # Fallback to Guild Leader for unindexed roster API
+                                    rank = 0
                             except Exception as roster_err:
                                 logger.warning(f"Roster check failed during import: {roster_err}")
+                                # Fallback to Guild Leader for unindexed roster API
+                                rank = 0
         except Exception as e:
             logger.error(f"Error checking guild membership via Blizzard API: {e}")
             raise HTTPException(

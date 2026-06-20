@@ -49,6 +49,7 @@ interface GuildProfile {
   faction: string
   recruitment_status: string
   progression_label: string
+  is_verified?: boolean
 }
 
 interface Interest {
@@ -82,6 +83,13 @@ const Dashboard: React.FC = () => {
   const [importModalError, setImportModalError] = useState<string | null>(null)
   const [importRegion, setImportRegion] = useState("us")
   const [importLoadingMap, setImportLoadingMap] = useState<Record<string, boolean>>({})
+
+  // Blizzard Guild Import States
+  const [showGuildImportModal, setShowGuildImportModal] = useState(false)
+  const [importingGuilds, setImportingGuilds] = useState<any[]>([])
+  const [guildImportLoading, setGuildImportLoading] = useState(false)
+  const [guildImportError, setGuildImportError] = useState<string | null>(null)
+  const [guildImportLoadingMap, setGuildImportLoadingMap] = useState<Record<string, boolean>>({})
 
   const fetchBlizzardCharacters = async (region: string) => {
     setImportModalLoading(true)
@@ -151,6 +159,61 @@ const Dashboard: React.FC = () => {
       }
     } catch {
       alert("Error connecting to server.")
+    }
+  }
+
+  const fetchImportableGuilds = async () => {
+    setGuildImportLoading(true)
+    setGuildImportError(null)
+    try {
+      const res = await fetch("/api/guilds/blizzard/importable", {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setImportingGuilds(data)
+      } else {
+        const data = await res.json()
+        setGuildImportError(data.detail || "Failed to load importable guilds from Battle.net.")
+      }
+    } catch {
+      setGuildImportError("Network error. Could not connect to the server.")
+    } finally {
+      setGuildImportLoading(false)
+    }
+  }
+
+  const handleImportGuild = async (guild: any) => {
+    const key = `${guild.guild_name}-${guild.guild_id}`
+    setGuildImportLoadingMap(prev => ({ ...prev, [key]: true }))
+    try {
+      const res = await fetch("/api/guilds/import", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          character_name: guild.character_name,
+          realm_slug: guild.realm_slug,
+          region: guild.region,
+          guild_name: guild.guild_name,
+          guild_id: guild.guild_id
+        })
+      })
+      if (res.ok) {
+        const newGuild = await res.json()
+        setGuilds(prev => [...prev, newGuild])
+        setImportingGuilds(prev => prev.filter(g => g.guild_id !== guild.guild_id))
+        alert(`Guild <${guild.guild_name}> imported successfully!`)
+      } else {
+        const errData = await res.json()
+        alert(errData.detail || "Failed to import guild.")
+      }
+    } catch {
+      alert("Error connecting to server.")
+    } finally {
+      setGuildImportLoadingMap(prev => ({ ...prev, [key]: false }))
     }
   }
 
@@ -409,17 +472,37 @@ const Dashboard: React.FC = () => {
             <h3 className="text-xl font-bold text-white flex items-center gap-2">
               <Shield className="h-5 w-5 text-accent" /> My Guilds & Recruitment
             </h3>
-            <Link to="/guilds/create" className="text-xs font-bold text-accent-light hover:text-accent flex items-center gap-1">
-              <Plus className="h-3.5 w-3.5" /> Create Guild Profile
-            </Link>
+            <div className="flex gap-2">
+              {user?.battlenet_id && (
+                <button 
+                  onClick={() => { setShowGuildImportModal(true); fetchImportableGuilds(); }}
+                  className="inline-flex bg-charcoal border border-charcoal-light hover:border-slate-400 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
+                >
+                  Import from Battle.net
+                </button>
+              )}
+              <Link to="/guilds/create" className="inline-flex bg-accent hover:bg-accent-dark text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-glow-purple flex items-center gap-1">
+                <Plus className="h-3.5 w-3.5" /> Create Guild Profile
+              </Link>
+            </div>
           </div>
 
           {guilds.length === 0 ? (
             <div className="bg-charcoal border border-charcoal-light rounded-2xl p-8 text-center space-y-4">
               <p className="text-slate-400 text-sm">No guilds registered. Create a guild profile to recruit raiders instantly.</p>
-              <Link to="/guilds/create" className="inline-flex bg-accent hover:bg-accent-dark text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-glow-purple">
-                Create Guild Profile
-              </Link>
+              <div className="flex justify-center gap-3">
+                {user?.battlenet_id && (
+                  <button 
+                    onClick={() => { setShowGuildImportModal(true); fetchImportableGuilds(); }}
+                    className="bg-charcoal border border-charcoal-light hover:border-slate-400 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all"
+                  >
+                    Import from Battle.net
+                  </button>
+                )}
+                <Link to="/guilds/create" className="inline-flex bg-accent hover:bg-accent-dark text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-glow-purple">
+                  Create Guild Profile
+                </Link>
+              </div>
             </div>
           ) : (
             <div className="space-y-4">
@@ -427,7 +510,14 @@ const Dashboard: React.FC = () => {
                 <div key={guild.id} className="bg-charcoal border border-charcoal-light rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 glow-card">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-lg font-black text-white">&lt;{guild.guild_name}&gt;</span>
+                      <span className="text-lg font-black text-white flex items-center gap-1.5">
+                        &lt;{guild.guild_name}&gt;
+                        {guild.is_verified && (
+                          <span title="Verified guild from Blizzard APIs" className="inline-flex">
+                            <ShieldCheck className="h-4.5 w-4.5 text-[#00aeff] drop-shadow-[0_0_5px_rgba(0,174,255,0.5)]" />
+                          </span>
+                        )}
+                      </span>
                       <span className="text-xs text-slate-400">@{guild.realm} ({guild.region})</span>
                     </div>
                     <div className="flex flex-wrap gap-2 text-xs">
@@ -645,6 +735,95 @@ const Dashboard: React.FC = () => {
               <span>Requires active wow.profile Blizzard API authorization</span>
               <button 
                 onClick={() => fetchBlizzardCharacters(importRegion)} 
+                className="text-accent-light hover:text-accent font-bold bg-none border-none outline-none cursor-pointer"
+              >
+                Refresh List
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Blizzard Guild Import Modal */}
+      {showGuildImportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-charcoal border border-charcoal-light w-full max-w-2xl rounded-2xl p-6 shadow-2xl relative overflow-hidden flex flex-col max-h-[85vh]">
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#00aeff]"></div>
+            
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-[#00aeff]" />
+                  Import Guild Profile
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">Select a guild associated with one of your verified characters to import it.</p>
+              </div>
+              <button 
+                onClick={() => setShowGuildImportModal(false)}
+                className="text-slate-400 hover:text-white transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="flex-grow overflow-y-auto space-y-3 pr-1 min-h-[250px]">
+              {guildImportLoading ? (
+                <div className="py-12 flex flex-col items-center gap-2 text-white">
+                  <Clock className="animate-spin h-8 w-8 text-[#00aeff]" />
+                  <span className="text-sm text-slate-300">Retrieving guilds from Battle.net...</span>
+                </div>
+              ) : guildImportError ? (
+                <div className="bg-rose-950/40 border border-rose-500/40 text-rose-200 text-xs p-4 rounded-xl text-center">
+                  {guildImportError}
+                </div>
+              ) : importingGuilds.length === 0 ? (
+                <div className="py-12 text-center text-slate-400 text-sm">
+                  No importable guilds found. Ensure you have imported and verified characters who belong to guilds first.
+                </div>
+              ) : (
+                importingGuilds.map(guild => {
+                  const key = `${guild.guild_name}-${guild.guild_id}`;
+                  const isAlliance = guild.faction === 'Alliance';
+                  return (
+                    <div 
+                      key={key} 
+                      className="bg-charcoal-dark border border-charcoal-light p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                    >
+                      <div>
+                        <div className="font-bold text-white text-base flex items-center gap-2">
+                          <span>&lt;{guild.guild_name}&gt;</span>
+                          <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
+                            isAlliance 
+                              ? 'bg-blue-950/40 border border-blue-500/40 text-blue-400' 
+                              : 'bg-red-950/40 border border-red-500/40 text-red-400'
+                          }`}>
+                            {guild.faction}
+                          </span>
+                        </div>
+                        <div className="text-xs text-slate-400 mt-1 flex flex-wrap items-center gap-1.5">
+                          <span>{guild.realm} ({guild.region})</span>
+                          <span className="text-slate-600">&bull;</span>
+                          <span>Verified via <strong className="text-slate-300">{guild.character_name}</strong> ({guild.rank_name})</span>
+                        </div>
+                      </div>
+                      
+                      <button
+                        onClick={() => handleImportGuild(guild)}
+                        disabled={guildImportLoadingMap[key]}
+                        className="bg-accent hover:bg-accent-dark text-white px-4 py-2 rounded-lg text-xs font-bold transition-all disabled:opacity-50 min-w-[90px] shrink-0 self-start sm:self-center"
+                      >
+                        {guildImportLoadingMap[key] ? "Importing..." : "Import Guild"}
+                      </button>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-charcoal-light text-[10px] text-slate-500 flex justify-between items-center shrink-0">
+              <span>Requires ownership of a verified character in the target guild</span>
+              <button 
+                onClick={fetchImportableGuilds} 
                 className="text-accent-light hover:text-accent font-bold bg-none border-none outline-none cursor-pointer"
               >
                 Refresh List

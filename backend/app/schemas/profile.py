@@ -136,6 +136,8 @@ class GuildProfileResponse(BaseModel):
     realm: str
     region: str
     faction: str
+    is_verified: bool
+    blizzard_guild_id: Optional[int] = None
     recruitment_status: str
     progression_label: str
     goals: List[str]
@@ -147,5 +149,15 @@ class GuildProfileResponse(BaseModel):
     visibility: str
     created_at: datetime
     updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class GuildImportRequest(BaseModel):
+    character_name: str
+    realm_slug: str
+    region: str
+    guild_name: str
+    guild_id: int
 
     model_config = ConfigDict(from_attributes=True)

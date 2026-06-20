@@ -1,12 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
+import httpx
+import asyncio
 
 from app.db.session import get_db
 from app.models.user import User
-from app.models.profile import GuildProfile
-from app.schemas.profile import GuildProfileCreate, GuildProfileUpdate, GuildProfileResponse
-from app.api.auth import get_current_user
+from app.models.profile import GuildProfile, PlayerProfile
+from app.schemas.profile import GuildProfileCreate, GuildProfileUpdate, GuildProfileResponse, GuildImportRequest
+from app.api.auth import get_current_user, get_localized_name
 from app.core.logging import logger
 
 router = APIRouter(prefix="/guilds", tags=["guilds"])
@@ -182,3 +184,215 @@ def delete_guild_profile(
     db.commit()
     
     logger.info(f"Guild profile ID {id} deleted successfully.")
+
+
+async def fetch_character_guilds(client, region, realm_slug, name_slug, headers, params, char_name):
+    url = f"https://{region}.api.blizzard.com/profile/wow/character/{realm_slug}/{name_slug}/guild-membership"
+    try:
+        res = await client.get(url, headers=headers, params=params, timeout=3.0)
+        if res.status_code == 200:
+            data = res.json()
+            guilds_list = []
+            for membership in data.get("guild_memberships", []):
+                guild = membership.get("guild", {})
+                guild_name = get_localized_name(guild.get("name"))
+                guild_id = guild.get("id")
+                realm_data = guild.get("realm", {})
+                guild_realm_name = get_localized_name(realm_data.get("name"))
+                guild_realm_slug = realm_data.get("slug")
+                rank = membership.get("rank", 99)
+                
+                rank_name = "Guild Leader" if rank == 0 else "Officer" if rank <= 4 else "Member"
+                
+                if guild_name and guild_realm_slug:
+                    guilds_list.append({
+                        "guild_name": guild_name,
+                        "guild_id": guild_id,
+                        "realm": guild_realm_name,
+                        "realm_slug": guild_realm_slug,
+                        "region": region.upper(),
+                        "rank": rank,
+                        "rank_name": rank_name,
+                        "character_name": char_name
+                    })
+            return guilds_list
+    except Exception as e:
+        logger.warning(f"Failed to fetch guild membership for {name_slug} on {realm_slug}: {e}")
+    return []
+
+
+@router.get("/blizzard/importable", response_model=List[dict])
+async def get_importable_guilds(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Returns a list of Blizzard guilds that the user can import, based on their verified characters.
+    """
+    if not current_user.battlenet_access_token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Your account is not linked to Battle.net."
+        )
+
+    # Get all verified characters of this user
+    verified_chars = db.query(PlayerProfile).filter(
+        PlayerProfile.user_id == current_user.id,
+        PlayerProfile.is_verified == True
+    ).all()
+
+    if not verified_chars:
+        return []
+
+    importable_guilds = []
+    seen_guilds = set()
+
+    headers = {
+        "Authorization": f"Bearer {current_user.battlenet_access_token}"
+    }
+
+    async with httpx.AsyncClient() as client:
+        tasks = []
+        for char in verified_chars:
+            region = char.region.lower()
+            realm_slug = char.realm.lower().replace(" ", "-").replace("'", "")
+            name_slug = char.character_name.lower()
+            params = {
+                "namespace": f"profile-{region}",
+                "locale": "en_US"
+            }
+            tasks.append(fetch_character_guilds(client, region, realm_slug, name_slug, headers, params, char.character_name))
+        
+        results = await asyncio.gather(*tasks)
+        for sublist in results:
+            for g in sublist:
+                key = (g["guild_name"].lower(), g["realm_slug"].lower(), g["region"].lower())
+                if key not in seen_guilds:
+                    seen_guilds.add(key)
+                    char_profile = next((c for c in verified_chars if c.character_name == g["character_name"]), None)
+                    g["faction"] = char_profile.faction if char_profile else "Alliance"
+                    importable_guilds.append(g)
+
+    return importable_guilds
+
+
+@router.post("/import", response_model=GuildProfileResponse, status_code=status.HTTP_201_CREATED)
+async def import_guild_profile(
+    req: GuildImportRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Imports and verifies a WoW Guild Profile based on one of the user's verified characters.
+    """
+    if not current_user.battlenet_access_token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Your account is not linked to Battle.net."
+        )
+
+    char_profile = db.query(PlayerProfile).filter(
+        PlayerProfile.user_id == current_user.id,
+        PlayerProfile.character_name.ilike(req.character_name),
+        PlayerProfile.is_verified == True
+    ).first()
+
+    if not char_profile:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"You do not own a verified character named {req.character_name}."
+        )
+
+    region = req.region.lower().strip()
+    realm_slug = req.realm_slug.lower().strip().replace(" ", "-").replace("'", "")
+    character_name_slug = req.character_name.lower().strip()
+
+    url = f"https://{region}.api.blizzard.com/profile/wow/character/{realm_slug}/{character_name_slug}/guild-membership"
+    headers = {
+        "Authorization": f"Bearer {current_user.battlenet_access_token}"
+    }
+    params = {
+        "namespace": f"profile-{region}",
+        "locale": "en_US"
+    }
+
+    is_member = False
+    rank = 99
+    async with httpx.AsyncClient() as client:
+        try:
+            res = await client.get(url, headers=headers, params=params)
+            if res.status_code == 200:
+                data = res.json()
+                for membership in data.get("guild_memberships", []):
+                    guild = membership.get("guild", {})
+                    g_id = guild.get("id")
+                    if g_id == req.guild_id:
+                        is_member = True
+                        rank = membership.get("rank", 99)
+                        break
+        except Exception as e:
+            logger.error(f"Error checking guild membership via Blizzard API: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Failed to query Blizzard API for guild membership verification."
+            )
+
+    if not is_member:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Character {req.character_name} is not a member of '{req.guild_name}' according to Blizzard APIs."
+        )
+
+    existing_guild = db.query(GuildProfile).filter(
+        GuildProfile.guild_name.ilike(req.guild_name),
+        GuildProfile.realm.ilike(char_profile.realm),
+        GuildProfile.region == req.region.upper()
+    ).first()
+
+    if existing_guild:
+        if existing_guild.owner_user_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="A profile for this guild has already been registered by another user."
+            )
+        
+        existing_guild.is_verified = True
+        existing_guild.blizzard_guild_id = req.guild_id
+        db.commit()
+        db.refresh(existing_guild)
+        return existing_guild
+
+    default_schedule = {
+        "days": [],
+        "start_time": "20:00",
+        "end_time": "23:00",
+        "timezone": "EST"
+    }
+    default_needs = {
+        "roles": ["Healer", "DPS"],
+        "classes": []
+    }
+
+    db_profile = GuildProfile(
+        owner_user_id=current_user.id,
+        guild_name=req.guild_name,
+        realm=char_profile.realm,
+        region=req.region.upper(),
+        faction=char_profile.faction,
+        is_verified=True,
+        blizzard_guild_id=req.guild_id,
+        recruitment_status="RECRUITING",
+        progression_label="None",
+        goals=["Casual"],
+        raid_schedule=default_schedule,
+        needs=default_needs,
+        description=f"Recruitment profile for <{req.guild_name}> on {char_profile.realm}.",
+        visibility="PUBLIC"
+    )
+
+    db.add(db_profile)
+    db.commit()
+    db.refresh(db_profile)
+
+    logger.info(f"Successfully imported and verified Guild Profile '{req.guild_name}' (ID: {db_profile.id})")
+    return db_profile

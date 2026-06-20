@@ -11,6 +11,7 @@ interface GuildProfile {
   faction: string
   recruitment_status: string
   progression_label: string
+  is_verified?: boolean
   goals: string[]
   raid_schedule: {
     days: number[]
@@ -390,7 +391,14 @@ const BrowseGuilds: React.FC = () => {
                       }`}>
                         {guild.faction}
                       </span>
-                      <h3 className="text-xl font-black text-white">&lt;{guild.guild_name}&gt;</h3>
+                      <h3 className="text-xl font-black text-white flex items-center gap-1.5">
+                        &lt;{guild.guild_name}&gt;
+                        {guild.is_verified && (
+                          <span title="Verified guild from Blizzard APIs" className="inline-flex">
+                            <ShieldCheck className="h-4.5 w-4.5 text-[#00aeff] drop-shadow-[0_0_5px_rgba(0,174,255,0.5)]" />
+                          </span>
+                        )}
+                      </h3>
                       <span className="text-xs text-slate-400 flex items-center gap-1">
                         <MapPin className="h-3 w-3" /> {guild.realm} ({guild.region})
                       </span>

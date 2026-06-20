@@ -61,6 +61,9 @@ class GuildProfile(Base):
     region = Column(String, nullable=False)
     faction = Column(String, nullable=False)
     
+    is_verified = Column(Boolean, default=False, nullable=False)
+    blizzard_guild_id = Column(Integer, nullable=True)
+    
     recruitment_status = Column(String, default="RECRUITING", nullable=False)  # RECRUITING, SELECTIVE, CLOSED
     progression_label = Column(String, nullable=False)  # e.g. "8/8H, 4/8M"
     goals = Column(JSON, default=list, nullable=False)  # e.g. ["Mythic", "Cutting Edge"]

@@ -420,7 +420,9 @@ const BrowsePlayers: React.FC = () => {
                       <h3 className="text-xl font-black text-white flex items-center gap-1.5">
                         {player.character_name}
                         {player.is_verified && (
-                          <ShieldCheck className="h-4.5 w-4.5 text-[#00aeff] drop-shadow-[0_0_5px_rgba(0,174,255,0.5)]" title="Verified character from Blizzard APIs" />
+                          <span title="Verified character from Blizzard APIs" className="inline-flex">
+                            <ShieldCheck className="h-4.5 w-4.5 text-[#00aeff] drop-shadow-[0_0_5px_rgba(0,174,255,0.5)]" />
+                          </span>
                         )}
                       </h3>
                       <span className="text-xs text-slate-400 flex items-center gap-1">

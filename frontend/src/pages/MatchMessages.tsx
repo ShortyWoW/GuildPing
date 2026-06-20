@@ -213,7 +213,9 @@ const MatchMessages: React.FC = () => {
                   <span className="flex items-center gap-1">
                     {match.player_profile.character_name}
                     {match.player_profile.is_verified && (
-                      <ShieldCheck className="h-4 w-4 text-[#00aeff] drop-shadow-[0_0_5px_rgba(0,174,255,0.5)]" title="Verified character from Blizzard APIs" />
+                      <span title="Verified character from Blizzard APIs" className="inline-flex">
+                        <ShieldCheck className="h-4 w-4 text-[#00aeff] drop-shadow-[0_0_5px_rgba(0,174,255,0.5)]" />
+                      </span>
                     )}
                   </span>
                 </>

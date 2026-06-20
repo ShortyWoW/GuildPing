@@ -417,3 +417,32 @@ async def get_blizzard_characters(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="An internal error occurred while communicating with Blizzard."
             )
+
+@router.get("/debug-bnet")
+async def debug_bnet(current_user: User = Depends(get_current_user)):
+    if not current_user.battlenet_access_token:
+        return {"error": "No battlenet token"}
+    
+    headers = {
+        "Authorization": f"Bearer {current_user.battlenet_access_token}"
+    }
+    params = {
+        "namespace": "profile-us",
+        "locale": "en_US"
+    }
+    
+    async with httpx.AsyncClient() as client:
+        r1 = await client.get("https://us.api.blizzard.com/profile/wow/character/area-52/callmeshawte/guild-membership", headers=headers, params=params)
+        r2 = await client.get("https://us.api.blizzard.com/profile/wow/character/area-52/callmeshawte", headers=headers, params=params)
+        r3 = await client.get("https://us.api.blizzard.com/data/wow/guild/area-52/mythically-challenged/roster", headers=headers, params=params)
+        
+        return {
+            "token": current_user.battlenet_access_token[:15] + "...",
+            "guild_membership_status": r1.status_code,
+            "guild_membership_body": r1.json() if r1.status_code == 200 else r1.text,
+            "profile_status": r2.status_code,
+            "profile_guild": r2.json().get("guild") if r2.status_code == 200 else r2.text,
+            "roster_status": r3.status_code,
+            "roster_body": r3.json() if r3.status_code == 200 else r3.text
+        }
+

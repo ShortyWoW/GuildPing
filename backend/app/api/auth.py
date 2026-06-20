@@ -353,12 +353,13 @@ async def get_blizzard_characters(
                     detail="Battle.net session expired. Please log in again using Battle.net."
                 )
                 
+            if response.status_code in [403, 404]:
+                logger.info(f"User {current_user.username} has no active WoW account or access to region {region}.")
+                return []
+                
             if response.status_code != 200:
                 logger.error(f"Blizzard API returned {response.status_code}: {response.text}")
-                raise HTTPException(
-                    status_code=status.HTTP_502_BAD_GATEWAY,
-                    detail="Failed to retrieve characters from Blizzard API."
-                )
+                return []
                 
             data = response.json()
             characters = []

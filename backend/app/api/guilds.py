@@ -206,23 +206,38 @@ async def fetch_character_guilds(client, region, realm_slug, name_slug, headers,
             rank = 99
             rank_name = "Member"
             
-            # Query guild roster to find actual rank
+            # Query guild summary / roster to find actual rank
             guild_href = guild_data.get("key", {}).get("href", "")
             if guild_href:
                 base_href = guild_href.split("?")[0]
-                roster_url = f"{base_href}/roster"
+                
+                # First, check if the character is the leader using the guild summary endpoint
                 try:
-                    roster_res = await client.get(roster_url, headers=headers, params=params, timeout=3.0)
-                    if roster_res.status_code == 200:
-                        roster_data = roster_res.json()
-                        for member_entry in roster_data.get("members", []):
-                            member_char = member_entry.get("character", {})
-                            if member_char.get("id") == char_data.get("id") or member_char.get("name", "").lower() == char_name.lower():
-                                rank = member_entry.get("rank", 99)
-                                rank_name = "Guild Leader" if rank == 0 else "Officer" if rank <= 4 else "Member"
-                                break
-                except Exception as roster_err:
-                    logger.warning(f"Roster check failed: {roster_err}")
+                    summary_res = await client.get(base_href, headers=headers, params=params, timeout=3.0)
+                    if summary_res.status_code == 200:
+                        summary_data = summary_res.json()
+                        leader_data = summary_data.get("leader", {})
+                        if leader_data.get("id") == char_data.get("id") or leader_data.get("name", "").lower() == char_name.lower():
+                            rank = 0
+                            rank_name = "Guild Leader"
+                except Exception as summary_err:
+                    logger.warning(f"Guild summary check failed: {summary_err}")
+                
+                # If they are not identified as leader (or guild summary check failed), fallback/check roster
+                if rank != 0:
+                    roster_url = f"{base_href}/roster"
+                    try:
+                        roster_res = await client.get(roster_url, headers=headers, params=params, timeout=3.0)
+                        if roster_res.status_code == 200:
+                            roster_data = roster_res.json()
+                            for member_entry in roster_data.get("members", []):
+                                member_char = member_entry.get("character", {})
+                                if member_char.get("id") == char_data.get("id") or member_char.get("name", "").lower() == char_name.lower():
+                                    rank = member_entry.get("rank", 99)
+                                    rank_name = "Guild Leader" if rank == 0 else "Officer" if rank <= 4 else "Member"
+                                    break
+                    except Exception as roster_err:
+                        logger.warning(f"Roster check failed: {roster_err}")
             
             if guild_name and guild_realm_slug:
                 return [{
@@ -346,22 +361,36 @@ async def import_guild_profile(
                 if guild_data and guild_data.get("id") == req.guild_id:
                     is_member = True
                     
-                    # Try to fetch actual rank from roster
+                    # Try to fetch actual rank from guild summary / roster
                     guild_href = guild_data.get("key", {}).get("href", "")
                     if guild_href:
                         base_href = guild_href.split("?")[0]
-                        roster_url = f"{base_href}/roster"
+                        
+                        # First, check if the character is the leader using the guild summary endpoint
                         try:
-                            roster_res = await client.get(roster_url, headers=headers, params=params, timeout=3.0)
-                            if roster_res.status_code == 200:
-                                roster_data = roster_res.json()
-                                for member_entry in roster_data.get("members", []):
-                                    member_char = member_entry.get("character", {})
-                                    if member_char.get("id") == char_data.get("id") or member_char.get("name", "").lower() == req.character_name.lower():
-                                        rank = member_entry.get("rank", 99)
-                                        break
-                        except Exception as roster_err:
-                            logger.warning(f"Roster check failed during import: {roster_err}")
+                            summary_res = await client.get(base_href, headers=headers, params=params, timeout=3.0)
+                            if summary_res.status_code == 200:
+                                summary_data = summary_res.json()
+                                leader_data = summary_data.get("leader", {})
+                                if leader_data.get("id") == char_data.get("id") or leader_data.get("name", "").lower() == req.character_name.lower():
+                                    rank = 0
+                        except Exception as summary_err:
+                            logger.warning(f"Guild summary check failed during import: {summary_err}")
+                        
+                        # If not identified as leader, fallback/check roster
+                        if rank != 0:
+                            roster_url = f"{base_href}/roster"
+                            try:
+                                roster_res = await client.get(roster_url, headers=headers, params=params, timeout=3.0)
+                                if roster_res.status_code == 200:
+                                    roster_data = roster_res.json()
+                                    for member_entry in roster_data.get("members", []):
+                                        member_char = member_entry.get("character", {})
+                                        if member_char.get("id") == char_data.get("id") or member_char.get("name", "").lower() == req.character_name.lower():
+                                            rank = member_entry.get("rank", 99)
+                                            break
+                            except Exception as roster_err:
+                                logger.warning(f"Roster check failed during import: {roster_err}")
         except Exception as e:
             logger.error(f"Error checking guild membership via Blizzard API: {e}")
             raise HTTPException(

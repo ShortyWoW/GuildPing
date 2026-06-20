@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Search, Shield, Filter, Calendar, MapPin, Award, CheckCircle, MessageSquare, Plus, Clock, Users, Send } from 'lucide-react'
+import { Search, Shield, Filter, Calendar, MapPin, Award, CheckCircle, MessageSquare, Plus, Clock, Users, Send, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../App'
 
 interface GuildProfile {
@@ -35,6 +35,7 @@ interface PlayerProfile {
   class_name: string
   spec_name: string
   role: string
+  is_verified: boolean
 }
 
 const DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]

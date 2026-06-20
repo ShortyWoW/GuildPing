@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Sparkles, Plus, Edit2, Search, ArrowRight, MessageSquare, Check, X, Shield, Clock } from 'lucide-react'
+import { Sparkles, Plus, Edit2, Search, ArrowRight, MessageSquare, Check, X, Shield, Clock, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../App'
 
 interface PlayerProfile {
@@ -12,6 +12,9 @@ interface PlayerProfile {
   class_name: string
   spec_name: string
   role: string
+  item_level?: number | null
+  is_verified: boolean
+  blizzard_character_id?: number | null
   recruitment_status: string
   goals: string[]
 }
@@ -49,6 +52,85 @@ const Dashboard: React.FC = () => {
   const [interests, setInterests] = useState<Interest[]>([])
   const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
+
+  // Blizzard Character Import & Verification States
+  const [showImportModal, setShowImportModal] = useState(false)
+  const [importingCharacters, setImportingCharacters] = useState<any[]>([])
+  const [importModalLoading, setImportModalLoading] = useState(false)
+  const [importModalError, setImportModalError] = useState<string | null>(null)
+  const [importRegion, setImportRegion] = useState("us")
+  const [importLoadingMap, setImportLoadingMap] = useState<Record<string, boolean>>({})
+
+  const fetchBlizzardCharacters = async (region: string) => {
+    setImportModalLoading(true)
+    setImportModalError(null)
+    try {
+      const res = await fetch(`/api/auth/blizzard/characters?region=${region}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setImportingCharacters(data)
+      } else {
+        const data = await res.json()
+        setImportModalError(data.detail || "Failed to load Battle.net characters.")
+      }
+    } catch {
+      setImportModalError("Network error. Could not connect to the server.")
+    } finally {
+      setImportModalLoading(false)
+    }
+  }
+
+  const handleImportCharacter = async (char: any, role: string) => {
+    setImportLoadingMap(prev => ({ ...prev, [char.id]: true }))
+    try {
+      const res = await fetch("/api/players/import", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          character_name: char.name,
+          realm_slug: char.realm.slug,
+          region: importRegion,
+          role: role
+        })
+      })
+      if (res.ok) {
+        const newProfile = await res.json()
+        setPlayers(prev => [...prev, newProfile])
+        setImportingCharacters(prev => prev.filter(c => c.id !== char.id))
+      } else {
+        const errData = await res.json()
+        alert(errData.detail || "Failed to import character.")
+      }
+    } catch {
+      alert("Error connecting to server.")
+    } finally {
+      setImportLoadingMap(prev => ({ ...prev, [char.id]: false }))
+    }
+  }
+
+  const handleVerifyCharacter = async (playerId: number) => {
+    try {
+      const res = await fetch(`/api/players/${playerId}/verify`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (res.ok) {
+        const updatedProfile = await res.json()
+        setPlayers(prev => prev.map(p => p.id === playerId ? updatedProfile : p))
+        alert("Character verified successfully!")
+      } else {
+        const errData = await res.json()
+        alert(errData.detail || "Verification failed.")
+      }
+    } catch {
+      alert("Error connecting to server.")
+    }
+  }
 
   useEffect(() => {
     if (!token) {
@@ -182,17 +264,43 @@ const Dashboard: React.FC = () => {
             <h3 className="text-xl font-bold text-white flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-accent" /> My Player Characters
             </h3>
-            <Link to="/players/create" className="text-xs font-bold text-accent-light hover:text-accent flex items-center gap-1">
-              <Plus className="h-3.5 w-3.5" /> Create Profile
-            </Link>
+            <div className="flex items-center gap-3">
+              {user?.battlenet_id && (
+                <button
+                  onClick={() => { setShowImportModal(true); fetchBlizzardCharacters(importRegion); }}
+                  className="text-xs font-bold text-[#00aeff] hover:text-[#33beff] flex items-center gap-1.5 bg-none border-none outline-none focus:outline-none"
+                >
+                  <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 fill-current">
+                    <path d="M1.846 0 0 3.333v17.436l1.846 1.795 10.667-6.154V6.154L1.846 0zm10.718 14.256L5.744 18.05V5.949l6.82 3.846v4.461zM4.103 2.82l6.82 3.846v8.205L4.103 11.026V2.82z"/>
+                  </svg>
+                  Import Character
+                </button>
+              )}
+              <Link to="/players/create" className="text-xs font-bold text-accent-light hover:text-accent flex items-center gap-1">
+                <Plus className="h-3.5 w-3.5" /> Create Profile
+              </Link>
+            </div>
           </div>
 
           {players.length === 0 ? (
             <div className="bg-charcoal border border-charcoal-light rounded-2xl p-8 text-center space-y-4">
               <p className="text-slate-400 text-sm">You haven't listed any WoW characters yet. Get discovered by guild recruiters.</p>
-              <Link to="/players/create" className="inline-flex bg-accent hover:bg-accent-dark text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-glow-purple">
-                Create Player Profile
-              </Link>
+              <div className="flex justify-center gap-3">
+                {user?.battlenet_id && (
+                  <button 
+                    onClick={() => { setShowImportModal(true); fetchBlizzardCharacters(importRegion); }}
+                    className="inline-flex bg-[#00172e] hover:bg-[#00254c] text-[#00aeff] border border-[#00aeff]/30 px-4 py-2.5 rounded-xl text-xs font-bold shadow-md hover:shadow-[0_0_10px_rgba(0,174,255,0.2)] items-center gap-1.5"
+                  >
+                    <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 fill-current">
+                      <path d="M1.846 0 0 3.333v17.436l1.846 1.795 10.667-6.154V6.154L1.846 0zm10.718 14.256L5.744 18.05V5.949l6.82 3.846v4.461zM4.103 2.82l6.82 3.846v8.205L4.103 11.026V2.82z"/>
+                    </svg>
+                    Import from Battle.net
+                  </button>
+                )}
+                <Link to="/players/create" className="inline-flex bg-accent hover:bg-accent-dark text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-glow-purple">
+                  Create Player Profile
+                </Link>
+              </div>
             </div>
           ) : (
             <div className="space-y-4">
@@ -200,13 +308,31 @@ const Dashboard: React.FC = () => {
                 <div key={player.id} className="bg-charcoal border border-charcoal-light rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 glow-card">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-lg font-black text-white">{player.character_name}</span>
+                      <span className="text-lg font-black text-white flex items-center gap-1.5">
+                        {player.character_name}
+                        {player.is_verified && (
+                          <ShieldCheck className="h-4.5 w-4.5 text-[#00aeff] drop-shadow-[0_0_5px_rgba(0,174,255,0.5)]" title="Verified character from Blizzard APIs" />
+                        )}
+                      </span>
                       <span className="text-xs text-slate-400">@{player.realm} ({player.region})</span>
+                      {!player.is_verified && user?.battlenet_id && (
+                        <button
+                          onClick={() => handleVerifyCharacter(player.id)}
+                          className="text-[10px] text-slate-400 hover:text-[#00aeff] underline font-semibold transition-colors bg-none border-none outline-none cursor-pointer"
+                        >
+                          Verify Ownership
+                        </button>
+                      )}
                     </div>
                     <div className="flex flex-wrap gap-2 text-xs">
                       <span className="px-2 py-0.5 rounded bg-charcoal-dark border border-charcoal-light text-slate-300">
                         {player.spec_name} {player.class_name}
                       </span>
+                      {player.item_level ? (
+                        <span className="px-2 py-0.5 rounded bg-charcoal-dark border border-charcoal-light text-wow-gold font-bold">
+                          {player.item_level} iLvl
+                        </span>
+                      ) : null}
                       <span className="px-2 py-0.5 rounded bg-charcoal-dark border border-charcoal-light text-slate-300">
                         {player.role}
                       </span>
@@ -331,6 +457,116 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+      {/* Blizzard Character Import Modal */}
+      {showImportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-charcoal border border-charcoal-light w-full max-w-2xl rounded-2xl p-6 shadow-2xl relative overflow-hidden flex flex-col max-h-[85vh]">
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#00aeff]"></div>
+            
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                  <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 fill-[#00aeff]">
+                    <title>Battle.net</title>
+                    <path d="M1.846 0 0 3.333v17.436l1.846 1.795 10.667-6.154V6.154L1.846 0zm10.718 14.256L5.744 18.05V5.949l6.82 3.846v4.461zM4.103 2.82l6.82 3.846v8.205L4.103 11.026V2.82z"/>
+                  </svg>
+                  Import WoW Characters
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">Select a character from your Battle.net account to create a verified profile.</p>
+              </div>
+              <button 
+                onClick={() => setShowImportModal(false)}
+                className="text-slate-400 hover:text-white transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="flex items-center gap-4 bg-charcoal-dark border border-charcoal-light p-3.5 rounded-xl mb-4">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Account Region:</span>
+              <div className="flex gap-2">
+                {["us", "eu", "kr", "tw"].map(r => (
+                  <button
+                    key={r}
+                    onClick={() => { setImportRegion(r); fetchBlizzardCharacters(r); }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all ${
+                      importRegion === r 
+                        ? "bg-[#00aeff] text-white shadow-[0_0_10px_rgba(0,174,255,0.4)]" 
+                        : "bg-charcoal border border-charcoal-light text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    {r}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex-grow overflow-y-auto space-y-3 pr-1 min-h-[250px]">
+              {importModalLoading ? (
+                <div className="py-12 flex flex-col items-center gap-2 text-white">
+                  <Clock className="animate-spin h-8 w-8 text-[#00aeff]" />
+                  <span className="text-sm text-slate-300">Retrieving characters from Blizzard...</span>
+                </div>
+              ) : importModalError ? (
+                <div className="bg-rose-950/40 border border-rose-500/40 text-rose-200 text-xs p-4 rounded-xl text-center">
+                  {importModalError}
+                </div>
+              ) : importingCharacters.length === 0 ? (
+                <div className="py-12 text-center text-slate-400 text-sm">
+                  No active characters found in this region for your Battle.net account.
+                </div>
+              ) : (
+                importingCharacters.map(char => (
+                  <div key={char.id} className="bg-charcoal-dark border border-charcoal-light p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <div className="font-bold text-white text-sm flex items-center gap-2">
+                        {char.name}
+                        <span className="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded font-normal">Level {char.level}</span>
+                      </div>
+                      <div className="text-xs text-slate-400 mt-0.5">
+                        {char.realm.name} &bull; {char.class_name || "WoW Character"}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2.5">
+                      <select
+                        id={`role-${char.id}`}
+                        defaultValue="DPS"
+                        className="bg-charcoal border border-charcoal-light text-slate-300 text-xs px-2.5 py-1.5 rounded-lg focus:outline-none focus:border-accent"
+                      >
+                        <option value="DPS">DPS</option>
+                        <option value="Healer">Healer</option>
+                        <option value="Tank">Tank</option>
+                      </select>
+
+                      <button
+                        onClick={() => {
+                          const selRole = (document.getElementById(`role-${char.id}`) as HTMLSelectElement).value
+                          handleImportCharacter(char, selRole)
+                        }}
+                        disabled={importLoadingMap[char.id]}
+                        className="bg-accent hover:bg-accent-dark text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-50 min-w-[70px]"
+                      >
+                        {importLoadingMap[char.id] ? "Importing..." : "Import"}
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-charcoal-light text-[10px] text-slate-500 flex justify-between items-center shrink-0">
+              <span>Requires active wow.profile Blizzard API authorization</span>
+              <button 
+                onClick={() => fetchBlizzardCharacters(importRegion)} 
+                className="text-accent-light hover:text-accent font-bold bg-none border-none outline-none cursor-pointer"
+              >
+                Refresh List
+              </button>
+            </div>
           </div>
         </div>
       )}

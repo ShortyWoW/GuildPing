@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
+import httpx
 
 from app.db.session import get_db
 from app.models.user import User
 from app.models.profile import PlayerProfile
-from app.schemas.profile import PlayerProfileCreate, PlayerProfileUpdate, PlayerProfileResponse
+from app.schemas.profile import PlayerProfileCreate, PlayerProfileUpdate, PlayerProfileResponse, CharacterImportRequest
 from app.api.auth import get_current_user
 from app.core.logging import logger
 
@@ -187,3 +188,253 @@ def delete_player_profile(
     db.commit()
     
     logger.info(f"Player profile ID {id} deleted successfully.")
+
+
+CLASS_SPEC_ROLE_MAP = {
+    ("death knight", "blood"): "Tank",
+    ("death knight", "frost"): "DPS",
+    ("death knight", "unholy"): "DPS",
+    ("demon hunter", "havoc"): "DPS",
+    ("demon hunter", "vengeance"): "Tank",
+    ("druid", "guardian"): "Tank",
+    ("druid", "restoration"): "Healer",
+    ("druid", "feral"): "DPS",
+    ("druid", "balance"): "DPS",
+    ("evoker", "preservation"): "Healer",
+    ("evoker", "devastation"): "DPS",
+    ("evoker", "augmentation"): "DPS",
+    ("hunter", "beast mastery"): "DPS",
+    ("hunter", "marksmanship"): "DPS",
+    ("hunter", "survival"): "DPS",
+    ("mage", "arcane"): "DPS",
+    ("mage", "fire"): "DPS",
+    ("mage", "frost"): "DPS",
+    ("monk", "brewmaster"): "Tank",
+    ("monk", "mistweaver"): "Healer",
+    ("monk", "windwalker"): "DPS",
+    ("paladin", "protection"): "Tank",
+    ("paladin", "holy"): "Healer",
+    ("paladin", "retribution"): "DPS",
+    ("priest", "discipline"): "Healer",
+    ("priest", "holy"): "Healer",
+    ("priest", "shadow"): "DPS",
+    ("rogue", "assassination"): "DPS",
+    ("rogue", "outlaw"): "DPS",
+    ("rogue", "subtlety"): "DPS",
+    ("shaman", "elemental"): "DPS",
+    ("shaman", "enhancement"): "DPS",
+    ("shaman", "restoration"): "Healer",
+    ("warlock", "affliction"): "DPS",
+    ("warlock", "demonology"): "DPS",
+    ("warlock", "destruction"): "DPS",
+    ("warrior", "protection"): "Tank",
+    ("warrior", "arms"): "DPS",
+    ("warrior", "fury"): "DPS"
+}
+
+@router.post("/import", response_model=PlayerProfileResponse, status_code=status.HTTP_201_CREATED)
+async def import_player_profile(
+    req: CharacterImportRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Imports and verifies a player character from the Blizzard WoW Profile API.
+    """
+    if not current_user.battlenet_access_token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Your account is not linked to Battle.net. Please log in with Battle.net."
+        )
+
+    # Format slugs correctly for Blizzard API
+    realm_slug = req.realm_slug.lower().strip().replace(" ", "-").replace("'", "")
+    character_name_slug = req.character_name.lower().strip()
+    region = req.region.lower().strip()
+
+    url = f"https://{region}.api.blizzard.com/profile/wow/character/{realm_slug}/{character_name_slug}"
+    headers = {
+        "Authorization": f"Bearer {current_user.battlenet_access_token}"
+    }
+    params = {
+        "namespace": f"profile-{region}",
+        "locale": "en_US"
+    }
+
+    logger.info(f"Querying detailed profile from Blizzard API: {url}")
+
+    async with httpx.AsyncClient() as client:
+        try:
+            res = await client.get(url, headers=headers, params=params)
+            if res.status_code == 401:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Battle.net token expired. Please re-authenticate."
+                )
+            if res.status_code != 200:
+                logger.warning(f"Blizzard API returned {res.status_code}: {res.text}")
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Character {req.character_name} not found on realm {req.realm_slug} in region {req.region}."
+                )
+            
+            data = res.json()
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error querying Blizzard Character Profile API: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Failed to query details from Blizzard API."
+            )
+
+    # Parse details
+    char_id = data.get("id")
+    char_name = data.get("name")
+    realm_name = data.get("realm", {}).get("name")
+    faction_type = data.get("faction", {}).get("name", "Alliance")
+    class_name = data.get("character_class", {}).get("name", "Unknown")
+    spec_name = data.get("active_spec", {}).get("name", "Unknown")
+    item_level = data.get("average_item_level", 0)
+
+    # Map role
+    mapped_role = CLASS_SPEC_ROLE_MAP.get((class_name.lower(), spec_name.lower()), req.role)
+
+    # Create verified profile
+    availability_dict = {
+        "days": [],
+        "start_time": "20:00",
+        "end_time": "23:00",
+        "timezone": "EST"
+    }
+
+    db_profile = PlayerProfile(
+        user_id=current_user.id,
+        character_name=char_name,
+        realm=realm_name,
+        region=req.region.upper(),
+        faction=faction_type,
+        class_name=class_name,
+        spec_name=spec_name,
+        role=mapped_role,
+        item_level=item_level,
+        is_verified=True,
+        blizzard_character_id=char_id,
+        recruitment_status="LOOKING",
+        goals=["Mythic"],
+        availability=availability_dict,
+        transfer_willing=False,
+        faction_change_willing=False,
+        battle_tag=current_user.battlenet_tag,
+        visibility="PUBLIC"
+    )
+
+    db.add(db_profile)
+    db.commit()
+    db.refresh(db_profile)
+
+    logger.info(f"Successfully imported and verified character {char_name}-{realm_name} (ID: {db_profile.id})")
+    return db_profile
+
+
+@router.post("/{id}/verify", response_model=PlayerProfileResponse)
+async def verify_player_profile(
+    id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Verifies an existing manual Player Profile against the user's Battle.net character list.
+    """
+    db_profile = db.query(PlayerProfile).filter(PlayerProfile.id == id).first()
+    if not db_profile:
+        raise HTTPException(status_code=404, detail="Player profile not found.")
+
+    if db_profile.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="You do not own this profile.")
+
+    if not current_user.battlenet_access_token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Your account is not linked to Battle.net. Please log in with Battle.net."
+        )
+
+    # 1. Fetch user's character list index to verify they actually own this character name/realm
+    region = db_profile.region.lower()
+    index_url = f"https://{region}.api.blizzard.com/profile/user/wow"
+    headers = {
+        "Authorization": f"Bearer {current_user.battlenet_access_token}"
+    }
+    params = {
+        "namespace": f"profile-{region}",
+        "locale": "en_US"
+    }
+
+    async with httpx.AsyncClient() as client:
+        try:
+            index_res = await client.get(index_url, headers=headers, params=params)
+            if index_res.status_code != 200:
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail="Failed to query user character index from Blizzard."
+                )
+            index_data = index_res.json()
+        except Exception as e:
+            logger.error(f"Error querying Blizzard user index API: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Error validating account ownership with Blizzard."
+            )
+
+    # Search index for matching character name & realm
+    matched_char = None
+    for account in index_data.get("wow_accounts", []):
+        for char in account.get("characters", []):
+            c_info = char.get("character", {})
+            if (c_info.get("name", "").lower() == db_profile.character_name.lower() and
+                c_info.get("realm", {}).get("slug", "").lower() == db_profile.realm.lower().strip().replace(" ", "-").replace("'", "")):
+                matched_char = c_info
+                break
+        if matched_char:
+            break
+
+    if not matched_char:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This character could not be found on your Battle.net character list."
+        )
+
+    # 2. Fetch detailed profile to verify current level, item level, spec, class
+    realm_slug = matched_char.get("realm", {}).get("slug")
+    char_name_slug = matched_char.get("name").lower()
+    detail_url = f"https://{region}.api.blizzard.com/profile/wow/character/{realm_slug}/{char_name_slug}"
+
+    async with httpx.AsyncClient() as client:
+        try:
+            detail_res = await client.get(detail_url, headers=headers, params=params)
+            if detail_res.status_code != 200:
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail="Failed to fetch character details from Blizzard."
+                )
+            detail_data = detail_res.json()
+        except Exception as e:
+            logger.error(f"Error querying Blizzard character details API: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Error fetching details from Blizzard."
+            )
+
+    # Update profile fields to match verified data
+    db_profile.is_verified = True
+    db_profile.blizzard_character_id = detail_data.get("id")
+    db_profile.item_level = detail_data.get("average_item_level", db_profile.item_level)
+    db_profile.class_name = detail_data.get("character_class", {}).get("name", db_profile.class_name)
+    db_profile.spec_name = detail_data.get("active_spec", {}).get("name", db_profile.spec_name)
+    db_profile.faction = detail_data.get("faction", {}).get("name", db_profile.faction)
+
+    db.commit()
+    db.refresh(db_profile)
+
+    logger.info(f"Successfully verified existing player profile {db_profile.character_name}-{db_profile.realm} (ID: {db_profile.id})")
+    return db_profile

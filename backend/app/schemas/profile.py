@@ -70,6 +70,8 @@ class PlayerProfileResponse(BaseModel):
     spec_name: str
     role: str
     item_level: Optional[int]
+    is_verified: bool
+    blizzard_character_id: Optional[int] = None
     recruitment_status: str
     goals: List[str]
     availability: Dict[str, Any]
@@ -83,6 +85,13 @@ class PlayerProfileResponse(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class CharacterImportRequest(BaseModel):
+    character_name: str
+    realm_slug: str
+    region: str
+    role: str
 
 
 # --- Guild Profile Schemas ---

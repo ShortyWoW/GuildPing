@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { Send, ArrowLeft, Clock, Shield, User, RefreshCw, MessageSquare, AlertCircle } from 'lucide-react'
+import { Send, ArrowLeft, Clock, Shield, User, RefreshCw, MessageSquare, AlertCircle, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../App'
 
 interface Message {
@@ -21,6 +21,7 @@ interface PlayerProfile {
   class_name: string
   spec_name: string
   role: string
+  is_verified: boolean
 }
 
 interface GuildProfile {
@@ -208,7 +209,13 @@ const MatchMessages: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <User className="h-4 w-4 text-accent" /> {match.player_profile.character_name}
+                  <User className="h-4 w-4 text-accent" />
+                  <span className="flex items-center gap-1">
+                    {match.player_profile.character_name}
+                    {match.player_profile.is_verified && (
+                      <ShieldCheck className="h-4 w-4 text-[#00aeff] drop-shadow-[0_0_5px_rgba(0,174,255,0.5)]" title="Verified character from Blizzard APIs" />
+                    )}
+                  </span>
                 </>
               )}
             </h3>

@@ -260,6 +260,7 @@ async def blizzard_callback(code: str, db: Session = Depends(get_db)):
             password_hash=None,
             battlenet_id=battlenet_id,
             battlenet_tag=battlenet_tag,
+            battlenet_access_token=access_token,
             is_active=True,
             is_admin=False
         )
@@ -268,11 +269,96 @@ async def blizzard_callback(code: str, db: Session = Depends(get_db)):
         db.refresh(user)
     else:
         logger.info(f"Logging in existing user via Blizzard OAuth: {user.username}")
+        user.battlenet_access_token = access_token
         if user.battlenet_tag != battlenet_tag:
             user.battlenet_tag = battlenet_tag
-            db.commit()
-            db.refresh(user)
+        db.commit()
+        db.refresh(user)
             
     token = create_access_token(subject=user.id)
     redirect_url = f"{settings.FRONTEND_URL}/login?token={token}"
     return RedirectResponse(url=redirect_url)
+
+
+@router.get("/blizzard/characters")
+async def get_blizzard_characters(
+    current_user: User = Depends(get_current_user),
+    region: str = "us"
+):
+    """
+    Retrieves the WoW characters associated with the user's Battle.net account.
+    """
+    if not current_user.battlenet_access_token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Your account is not linked to Battle.net. Please login with Battle.net."
+        )
+        
+    # Region validation
+    valid_regions = ["us", "eu", "kr", "tw"]
+    if region.lower() not in valid_regions:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid region. Must be one of {valid_regions}"
+        )
+        
+    url = f"https://{region}.api.blizzard.com/profile/user/wow"
+    headers = {
+        "Authorization": f"Bearer {current_user.battlenet_access_token}"
+    }
+    params = {
+        "namespace": f"profile-{region}",
+        "locale": "en_US"
+    }
+    
+    logger.info(f"Fetching Battle.net characters for user {current_user.username} in region {region}")
+    
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(url, headers=headers, params=params)
+            
+            if response.status_code == 401:
+                logger.warning(f"Blizzard API returned 401 for user {current_user.username}. Token expired.")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Battle.net session expired. Please log in again using Battle.net."
+                )
+                
+            if response.status_code != 200:
+                logger.error(f"Blizzard API returned {response.status_code}: {response.text}")
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail="Failed to retrieve characters from Blizzard API."
+                )
+                
+            data = response.json()
+            characters = []
+            
+            for account in data.get("wow_accounts", []):
+                for char in account.get("characters", []):
+                    c_info = char.get("character", {})
+                    playable_class = char.get("playable_class", {}) or c_info.get("playable_class", {})
+                    playable_race = char.get("playable_race", {}) or c_info.get("playable_race", {})
+                    
+                    characters.append({
+                        "id": c_info.get("id"),
+                        "name": c_info.get("name"),
+                        "level": char.get("level") or c_info.get("level"),
+                        "realm": {
+                            "name": c_info.get("realm", {}).get("name"),
+                            "slug": c_info.get("realm", {}).get("slug")
+                        },
+                        "class_name": playable_class.get("name"),
+                        "race_name": playable_race.get("name")
+                    })
+                    
+            return characters
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error querying Blizzard Profile API: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An internal error occurred while communicating with Blizzard."
+            )

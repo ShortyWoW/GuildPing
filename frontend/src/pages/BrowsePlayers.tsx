@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Search, Shield, Filter, Calendar, MapPin, Award, CheckCircle, MessageSquare, Plus, Clock, Users, Send } from 'lucide-react'
+import { Search, Shield, Filter, Calendar, MapPin, Award, CheckCircle, MessageSquare, Plus, Clock, Users, Send, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../App'
 
 interface PlayerProfile {
@@ -13,6 +13,8 @@ interface PlayerProfile {
   spec_name: string
   role: string
   item_level?: number
+  is_verified: boolean
+  blizzard_character_id?: number | null
   recruitment_status: string
   goals: string[]
   availability: {
@@ -415,7 +417,12 @@ const BrowsePlayers: React.FC = () => {
                       }`}>
                         {player.faction}
                       </span>
-                      <h3 className="text-xl font-black text-white">{player.character_name}</h3>
+                      <h3 className="text-xl font-black text-white flex items-center gap-1.5">
+                        {player.character_name}
+                        {player.is_verified && (
+                          <ShieldCheck className="h-4.5 w-4.5 text-[#00aeff] drop-shadow-[0_0_5px_rgba(0,174,255,0.5)]" title="Verified character from Blizzard APIs" />
+                        )}
+                      </h3>
                       <span className="text-xs text-slate-400 flex items-center gap-1">
                         <MapPin className="h-3 w-3" /> {player.realm} ({player.region})
                       </span>

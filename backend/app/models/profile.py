@@ -22,6 +22,9 @@ class PlayerProfile(Base):
     role = Column(String, nullable=False)  # Tank, Healer, DPS
     item_level = Column(Integer, nullable=True)
     
+    is_verified = Column(Boolean, default=False, nullable=False)
+    blizzard_character_id = Column(Integer, nullable=True)
+    
     recruitment_status = Column(String, default="LOOKING", nullable=False)  # LOOKING, OPEN_TO_OFFERS, NOT_LOOKING
     goals = Column(JSON, default=list, nullable=False)  # e.g., ["Mythic", "Cutting Edge"]
     

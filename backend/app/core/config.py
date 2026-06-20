@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from pydantic import ConfigDict
+from typing import Optional
 
 class Settings(BaseSettings):
     """
@@ -23,5 +24,9 @@ class Settings(BaseSettings):
     # CORS
     FRONTEND_URL: str = "http://localhost:8080"
     PUBLIC_SITE_URL: str = "http://localhost:8080"
+
+    # Blizzard OAuth API Credentials
+    BLIZZARD_CLIENT_ID: Optional[str] = None
+    BLIZZARD_CLIENT_SECRET: Optional[str] = None
 
 settings = Settings()

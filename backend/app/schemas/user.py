@@ -22,12 +22,14 @@ class UserResponse(BaseModel):
     Response schema containing safe user profile attributes.
     """
     id: int
-    email: str
+    email: Optional[str] = None
     username: str
     is_active: bool
     is_admin: bool
     created_at: datetime
     last_seen_at: datetime
+    battlenet_id: Optional[str] = None
+    battlenet_tag: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 

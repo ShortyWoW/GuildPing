@@ -58,9 +58,19 @@ const Settings: React.FC = () => {
           </div>
           <div>
             <h3 className="text-xl font-extrabold text-white">{user?.username}</h3>
-            <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-1">
-              <Mail className="h-3.5 w-3.5" /> {user?.email}
-            </p>
+            {user?.email ? (
+              <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-1">
+                <Mail className="h-3.5 w-3.5" /> {user?.email}
+              </p>
+            ) : null}
+            {user?.battlenet_tag ? (
+              <p className="text-xs text-[#00aeff] flex items-center gap-1.5 mt-1 font-semibold">
+                <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 fill-[#00aeff] shrink-0">
+                  <path d="M1.846 0 0 3.333v17.436l1.846 1.795 10.667-6.154V6.154L1.846 0zm10.718 14.256L5.744 18.05V5.949l6.82 3.846v4.461zM4.103 2.82l6.82 3.846v8.205L4.103 11.026V2.82z"/>
+                </svg>
+                BattleTag: {user.battlenet_tag}
+              </p>
+            ) : null}
           </div>
         </div>
 

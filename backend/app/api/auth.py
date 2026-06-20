@@ -1,13 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
+import httpx
+import urllib.parse
 
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, UserLogin, UserResponse, TokenResponse
 from app.core.security import get_password_hash, verify_password, create_access_token, decode_access_token
 from app.core.logging import logger
+from app.core.config import settings
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -148,3 +152,127 @@ def get_me(current_user: User = Depends(get_current_user)):
     Returns the authenticated user's details.
     """
     return current_user
+
+
+@router.get("/blizzard/login")
+def blizzard_login():
+    """
+    Redirects the user's browser to the Blizzard Battle.net OAuth authorize page.
+    """
+    if not settings.BLIZZARD_CLIENT_ID or not settings.BLIZZARD_CLIENT_SECRET:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Blizzard OAuth is not configured on this server."
+        )
+    
+    scope = "openid wow.profile"
+    redirect_uri = f"{settings.PUBLIC_SITE_URL}/api/auth/blizzard/callback"
+    
+    auth_url = (
+        "https://oauth.battle.net/authorize"
+        f"?client_id={settings.BLIZZARD_CLIENT_ID}"
+        f"&redirect_uri={urllib.parse.quote(redirect_uri)}"
+        f"&response_type=code"
+        f"&scope={urllib.parse.quote(scope)}"
+    )
+    
+    logger.info("Redirecting user to Blizzard OAuth authorize page.")
+    return RedirectResponse(url=auth_url)
+
+
+@router.get("/blizzard/callback")
+async def blizzard_callback(code: str, db: Session = Depends(get_db)):
+    """
+    Handles the redirect callback from Blizzard.
+    Exchanges the authorization code for an access token,
+    queries the Battle.net user info endpoint,
+    finds or registers the User, and redirects to the frontend with a JWT.
+    """
+    if not settings.BLIZZARD_CLIENT_ID or not settings.BLIZZARD_CLIENT_SECRET:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Blizzard OAuth is not configured on this server."
+        )
+        
+    redirect_uri = f"{settings.PUBLIC_SITE_URL}/api/auth/blizzard/callback"
+    
+    logger.info("Exchanging code for Blizzard access token.")
+    
+    async with httpx.AsyncClient() as client:
+        try:
+            token_response = await client.post(
+                "https://oauth.battle.net/token",
+                data={
+                    "client_id": settings.BLIZZARD_CLIENT_ID,
+                    "client_secret": settings.BLIZZARD_CLIENT_SECRET,
+                    "code": code,
+                    "redirect_uri": redirect_uri,
+                    "grant_type": "authorization_code"
+                },
+                auth=(settings.BLIZZARD_CLIENT_ID, settings.BLIZZARD_CLIENT_SECRET)
+            )
+            
+            if token_response.status_code != 200:
+                logger.error(f"Failed token exchange from Blizzard: {token_response.text}")
+                return RedirectResponse(url=f"{settings.FRONTEND_URL}/login?error=token_exchange_failed")
+                
+            token_data = token_response.json()
+            access_token = token_data.get("access_token")
+            
+            if not access_token:
+                logger.error("Token exchange response did not contain access_token.")
+                return RedirectResponse(url=f"{settings.FRONTEND_URL}/login?error=missing_access_token")
+                
+            userinfo_response = await client.get(
+                "https://oauth.battle.net/userinfo",
+                headers={"Authorization": f"Bearer {access_token}"}
+            )
+            
+            if userinfo_response.status_code != 200:
+                logger.error(f"Failed to fetch userinfo from Blizzard: {userinfo_response.text}")
+                return RedirectResponse(url=f"{settings.FRONTEND_URL}/login?error=profile_fetch_failed")
+                
+            userinfo = userinfo_response.json()
+            battlenet_id = str(userinfo.get("sub") or userinfo.get("id"))
+            battlenet_tag = userinfo.get("battletag")
+            
+            if not battlenet_id or not battlenet_tag:
+                logger.error("Blizzard userinfo response did not contain ID or BattleTag.")
+                return RedirectResponse(url=f"{settings.FRONTEND_URL}/login?error=invalid_profile_details")
+                
+        except Exception as e:
+            logger.error(f"Exception during Blizzard OAuth token exchange / profile fetch: {e}")
+            return RedirectResponse(url=f"{settings.FRONTEND_URL}/login?error=oauth_error")
+            
+    # Find or Create User
+    user = db.query(User).filter(User.battlenet_id == battlenet_id).first()
+    
+    if not user:
+        logger.info(f"Registering new user via Blizzard OAuth: {battlenet_tag}")
+        username = battlenet_tag.replace("#", "")
+        existing_username = db.query(User).filter(User.username == username).first()
+        if existing_username:
+            username = f"{username}_{battlenet_id[:5]}"
+            
+        user = User(
+            email=None,
+            username=username,
+            password_hash=None,
+            battlenet_id=battlenet_id,
+            battlenet_tag=battlenet_tag,
+            is_active=True,
+            is_admin=False
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    else:
+        logger.info(f"Logging in existing user via Blizzard OAuth: {user.username}")
+        if user.battlenet_tag != battlenet_tag:
+            user.battlenet_tag = battlenet_tag
+            db.commit()
+            db.refresh(user)
+            
+    token = create_access_token(subject=user.id)
+    redirect_url = f"{settings.FRONTEND_URL}/login?token={token}"
+    return RedirectResponse(url=redirect_url)

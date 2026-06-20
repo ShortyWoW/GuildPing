@@ -21,9 +21,11 @@ import GuildProfileForm from './pages/GuildProfileForm'
 
 interface User {
   id: number
-  email: string
+  email: string | null
   username: string
   is_admin: boolean
+  battlenet_id?: string | null
+  battlenet_tag?: string | null
 }
 
 interface AuthContextType {
